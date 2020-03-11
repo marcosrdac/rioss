@@ -5,6 +5,6 @@
 
 ## Contributors
 
-Programmer: Marcos Reinan de Assis Conceição
-Database manager: Laysla Possebon
-Advisor: Luis Felipe Ferreira de Mendonça
+ - Data scientist: Marcos Reinan de Assis Conceição
+ - Database manager: Laysla Possebon
+ - Advisor: Professor Luis Felipe Ferreira de Mendonça
