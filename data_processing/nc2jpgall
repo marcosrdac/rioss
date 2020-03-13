@@ -1,0 +1,25 @@
+#!/usr/bin/env sh
+
+# directory containing NetCDF files
+inputdir="$HOME/data/0_original"
+# directory to put JPEG files
+outputdir="$HOME/data/1_jpeg"
+# quality
+quality=60
+# python from current environment
+PYTHON="/usr/bin/env python"
+
+
+inputdir="${1:-$inputdir}"
+outputdir="${2:-$outputdir}"
+quality="${3:-$quality}"
+
+[ ! -d "$inputdir" ] && echo Input dir does not exist! && exit 1
+[ ! -d "$outputdir" ] && mkdir -p $outputdir
+
+for file in $inputdir/*
+do
+  outfile="$outputdir/$(basename $file)"
+  echo "Converting $file to $outfile..."
+  [ -f $file ] && $PYTHON nc2jpg/nc2jpg.py $file -o $outfile -q $quality
+done
