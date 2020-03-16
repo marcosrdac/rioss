@@ -4,3 +4,9 @@
 [submodule "data_processing/--force"]
 	path = data_processing/--force
 	url = git@github.com:marcosrdac/nc2jpg.git
+[submodule "models/nc2jpg"]
+	path = models/nc2jpg
+	url = git@github.com:marcosrdac/nc2jpg.git
+[submodule "models/overpool"]
+	path = models/overpool
+	url = https://github.com/marcosrdac/overpool
