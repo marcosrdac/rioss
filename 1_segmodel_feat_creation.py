@@ -38,6 +38,8 @@ for ncf in input_data_dir_fps:
         if name == 'oil':
             has_oil = True
             oil_mask = np.array(Image.open(mask_fp))
+            plt.imshow(oil_mask)
+            plt.show()
         elif name == 'sea':
             has_sea = True
             sea_mask = np.array(Image.open(mask_fp))
