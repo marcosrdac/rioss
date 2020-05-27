@@ -31,13 +31,13 @@ input_masks_dir_fps = [join(INPUT_MASKS_DIR, f) for f in input_masks_dir_fps]
 
 for ncf in input_data_dir_fps:
     # SENTINEL-1 CONFIGURATION
-    basename = splitext(basename(ncf))[0]
-    mask_files = [f for f in input_masks_dir_fps if basename in f]
+    base = splitext(basename(ncf))[0]
+    mask_files = [f for f in input_masks_dir_fps if base in f]
     for mask_fp in mask_files:
         name = re.findall(r'.*_([^_]*).jpg', mask_fp)[0]
         if name == 'oil':
             has_oil = True
-            oil_mask = np.array(Image.open(mask_fp))
+            oil_mask = np.array(Image.open(mask_fp))[:,:,0]
             plt.imshow(oil_mask)
             plt.show()
         elif name == 'sea':
