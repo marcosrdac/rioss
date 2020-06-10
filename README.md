@@ -5,6 +5,7 @@
 
 ## Contributors
 
- - **Data scientist**: Marcos Reinan de Assis Conceição
- - **Database manager**: Laysla Possebon
- - **Advisor**: Professor Luis Felipe Ferreira de Mendonça
+
+ - **Data scientist**: Marcos Reinan de Assis Conceição (graduation researchship student)
+ - **Database manager**: Laysla Possebon (graduation researchship student)
+ - **Advisor**: Professor Luis Felipe Ferreira de Mendonça (LOS-IGEO-UFBA)
