@@ -1,24 +1,29 @@
 #!/usr/bin/env python3
 
-from keras.models import load_model
 import re
 import numpy as np
 import netCDF4 as nc
+from keras.models import load_model  # needs to be imported here
 import scipy as scp
 import matplotlib.pyplot as plt
 import seaborn as sns
 from os import listdir, makedirs
 from os.path import expanduser, isdir, splitext, join, basename
-from functions import mwa, mcwa, mwsd
+from functions import get_mwa, get_mrwa, mwsd
 segmodel = load_model('segmodel_5_2_1_5_10.h5')
 #
 # user defined
 INPUT_DATA_DIR = expanduser('~/data/0_original/')
 
+mwa3x3 = get_mwa(1)
+mwa15x15 = get_mwa(7)
+mcwa1625 = get_mrwa(25, 16)
+
 FUNCTIONS = {
-    'mcwa1625': (lambda img: mcwa(img, 25, 16)),
-    'mwa15x15': (lambda img: mwa(img, 7)),
-    'mwsd3x3/mwsd15x15': (lambda img: mwa(img, 1)/mwa(img, 7)),
+    'mrwa1625': (lambda img: mcwa1625(img)),
+    'mwa15x15': (lambda img: mwa15x15(img)),
+    'mwsd3x3/mwsd15x15': (lambda img: mwsd(img, 1)/mwsd(img, 7)),
+    #'mwsd3x3/mwsd15x15': (lambda img: mwa3x3(img)/mwa15x15(img)),
 }
 
 LABELS = {
@@ -46,16 +51,17 @@ def segmentate(img, functions=FUNCTIONS):
     return(y.reshape(img.shape))
 
 
+print('\n'*80)
 print('starting')
-# ncd = nc.Dataset(
-#    '/mnt/hdd/tmp/sar/subset_0_of_S1B_IW_SLC__1SDV_20190319T181151_20190319T181219_015427_01CE45_2311.nc')
-# print(ncd)
-#ncvar = ncd.variables['Sigma0_VV_db']
-#var = np.array(ncvar)
-# print(ncvar)
+ncd = nc.Dataset(
+        '/home/marcosrdac/tmp/los/sar/' +
+        'subset_0_of_S1B_IW_SLC__1SDV_20190319T181151_20190319T181219_015427_01CE45_2311.nc')
+ncvar = ncd.variables['Sigma0_VV_db']
+#var = np.array(ncvar)[:2000, 2000:3000]
+var = np.array(ncvar)
 
-var = np.load('/mnt/hdd/tmp/sar/test.npy')
-
+#var = np.load('/mnt/hdd/tmp/sar/test.npy')
+#
 fig, axes = plt.subplots(1, 2, dpi=300, figsize=(10, 4))
 axes[0].imshow(var)
 axes[1].imshow(segmentate(var))

@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 
-from keras.models import load_model
 import re
 import numpy as np
 import netCDF4 as nc
+from keras.models import load_model  # needs to be imported here
 import scipy as scp
 import matplotlib.pyplot as plt
 import seaborn as sns
@@ -46,16 +46,15 @@ def segmentate(img, functions=FUNCTIONS):
     return(y.reshape(img.shape))
 
 
+print('\n'*80)
 print('starting')
-# ncd = nc.Dataset(
-#    '/mnt/hdd/tmp/sar/subset_0_of_S1B_IW_SLC__1SDV_20190319T181151_20190319T181219_015427_01CE45_2311.nc')
-# print(ncd)
-#ncvar = ncd.variables['Sigma0_VV_db']
-#var = np.array(ncvar)
-# print(ncvar)
+ncd = nc.Dataset(
+    '/mnt/hdd/tmp/sar/subset_0_of_S1B_IW_SLC__1SDV_20190319T181151_20190319T181219_015427_01CE45_2311.nc')
+ncvar = ncd.variables['Sigma0_VV_db']
+var = np.array(ncvar)[:2000, 2000:3000]
 
-var = np.load('/mnt/hdd/tmp/sar/test.npy')
-
+#var = np.load('/mnt/hdd/tmp/sar/test.npy')
+#
 fig, axes = plt.subplots(1, 2, dpi=300, figsize=(10, 4))
 axes[0].imshow(var)
 axes[1].imshow(segmentate(var))

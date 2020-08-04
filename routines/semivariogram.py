@@ -59,7 +59,7 @@ def validate_semivariogram_index(semivariogram, x=None):
         x = np.arange(1, semivariogram.size+1)
     index = np.logical_and(x>0, semivariogram>0)
     return(index)
-## change for
+## change to
 def validate_index(values, x=None):
     if x is None:
         x = np.arange(1, values.size+1)
