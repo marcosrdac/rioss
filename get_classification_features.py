@@ -11,21 +11,27 @@ from PIL import Image
 # DEFINED
 from parameters import CLASSIFICATION_INPUT_DATA, CLASSIFICATION_INPUT_MASKS, \
     CLASSIFICATION_BLOCKS_OUTPUT, CLASSIFICATION_FEATURES_OUTPUT
-from routines.functions import listifext, first_channel, sample_min_dist
+from routines.functions import discarray, listifext, first_channel, \
+    sample_min_dist
 # temporary
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 
 
+# PRECONFIGURATION
+
 # block side, half-side
 WS = 512
-HWS = int(WS//2)
+HWS = WS//2
 
-
-FUNCTIONS = {
-    'val': (lambda img: img),
-    # ADD CREATED FUNCTIONS
-}
+FEATURES = [
+    {
+        'name': 'test',
+        'function': (lambda img: 1.),
+        'values': None,
+    },
+    # ADD CREATED FEATURES
+]
 
 CATEGORIES = [
     {
@@ -53,7 +59,7 @@ CATEGORIES = [
         'coords': []},
 ]
 
-# preconfiguration
+
 input_data_fps = listifext(CLASSIFICATION_INPUT_DATA, 'nc', fullpath=True)
 input_masks_fps = listifext(CLASSIFICATION_INPUT_MASKS, 'jpg', fullpath=True)
 
@@ -98,47 +104,80 @@ for ncf in input_data_fps:
     img = ncd['Sigma0_VV_db']  # (Sentinel-1 band name after db conversion)
     h, w = img.shape
 
-    fig, ax = plt.subplots()
-    ax.imshow(img)
-    ax.imshow(mask, alpha=.1)
-    for c in CATEGORIES:
-        if c['has_coords']:
-            for yc, xc in zip(c['coords'][:, 0], c['coords'][:, 1]):
-                y0, x0 = (i-HWS for i in (yc, xc))
-                print(y0, x0)
-                rect = patches.Rectangle((x0, y0), WS, WS,
-                                         linewidth=1, edgecolor=c['color'],
-                                         facecolor='none')
-                ax.add_patch(rect)
-                ax.scatter(xc, yc, color=c['color'])
-    plt.show()
+    # # debugging blocks
+    # fig, ax = plt.subplots()
+    # ax.imshow(img)
+    # for c in CATEGORIES:
+    #     if c['has_coords']:
+    #         for yc, xc in zip(c['coords'][:, 0], c['coords'][:, 1]):
+    #             y0, x0 = (i-HWS for i in (yc, xc))
+    #             print(y0, x0)
+    #             rect = patches.Rectangle((x0, y0), WS, WS,
+    #                                      linewidth=1, edgecolor=c['color'],
+    #                                      facecolor='none')
+    #             ax.add_patch(rect)
+    #             ax.scatter(xc, yc, color=c['color'])
+    # plt.show()
 
-    total_coords = np.sum([c['coords'].shape[0]
-                           for c in CATEGORIES
-                           if c['has_coords']])
-    categories = np.empty(total_coords, dtype=int)
+    # getting total number of coordinates
+    ncoords = np.sum([c['coords'].shape[0]
+                      for c in CATEGORIES
+                      if c['has_coords']])
+
+    # saving block labels
+    labels_filename = join(CLASSIFICATION_FEATURES_OUTPUT,
+                           f'{base}_labels.bin')
+    categories = discarray(labels_filename, 'w+', np.int32, ncoords)
     cur = 0
     for C, c in enumerate(CATEGORIES):
         if c['has_coords']:
             n = c['coords'].shape[0]
             categories[cur:cur+n] = C
             cur += n
-    print(categories)
-#    np.save(join(CLASSIFICATION_FEATURES_OUTPUT,
-#                 f'{base}_{mask_name}.npy'), labels)
-#    del(labels)
-#
-#    for function_name, function in FUNCTIONS.items():
-#        resultimg = function(img)
-#        if has_oil:
-#            oil_points = resultimg[oil_mask]
-#        if has_sea:
-#            sea_points = resultimg[sea_mask]
-#        if has_terrain:
-#            terrain_points = resultimg[terrain_mask]
-#        all_masked = np.concatenate([oil_points, sea_points, terrain_points])
-#        np.save(join(CLASSIFICATION_FEATURES_OUTPUT,
-#                     f'{base}_{function_name}.npy'), all_masked)
-#        del(all_masked)
-#        del(oil_points)
-#        del(terrain_points)
+
+    # saving block features
+    for feature in FEATURES:
+        feature_filename = join(CLASSIFICATION_FEATURES_OUTPUT,
+                                f"{base}_{feature['name']}.bin")
+        feature['values'] = discarray(
+            feature_filename, 'w+', np.float64, ncoords)
+
+    cur = 0
+    for c in CATEGORIES:
+        if c['has_coords']:
+            # defining block
+            for yc, xc in zip(c['coords'][:, 0],
+                              c['coords'][:, 1]):
+                yi, xi = yc-HWS, xc-HWS
+                yf, xf = yi+WS, xi+WS
+                # checking if block coordinates are inside array boundaries
+                inbounds = (0 <= yi <= yf <= h and 0 <= xi <= xf <= h)
+
+                for feature in FEATURES:
+                    if inbounds:
+                        block = img[yi:yf, xi:xf]
+                        feature_val = feature['function'](block)
+                    else:
+                        feature_val = np.nan
+                feature["values"][cur] = feature_val
+                cur += 1
+
+    # saving blocks themselves
+    cur = 0
+    for c in CATEGORIES:
+        if c['has_coords']:
+            # defining block
+            for yc, xc in zip(c['coords'][:, 0],
+                              c['coords'][:, 1]):
+                yi, xi = yc-HWS, xc-HWS
+                yf, xf = yi+WS, xi+WS
+                # checking if block coordinates are inside array boundaries
+                inbounds = (0 <= yi <= yf <= h and 0 <= xi <= xf <= h)
+                if inbounds:
+                    block_filename = join(CLASSIFICATION_BLOCKS_OUTPUT,
+                                          f"{base}_block_{cur}.bin")
+                    block_file = discarray(block_filename, 'w+', np.float64,
+                                           block.shape)
+                    block = img[yi:yf, xi:xf]
+                    block_file[...] = block
+                cur += 1
