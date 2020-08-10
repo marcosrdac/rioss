@@ -19,18 +19,18 @@ from routines.functions import mwa, mcwa, mwsd
 
 
 FUNCTIONS = {
-    'val': (lambda img: img),
-    'mwa3x3': (lambda img: mwa(img, 1)),
-    'mwsd3x3': (lambda img: mwsd(img, 1)),
-    'mwa15x15': (lambda img: mwa(img, 7)),
+    'val':       (lambda img: img),
+    'mwa3x3':    (lambda img: get_mwa(1)(img)),
+    'mwsd3x3':   (lambda img: mwsd(img, 1)),
+    'mwa15x15':  (lambda img: get_mwa(7)(img)),
     'mwsd15x15': (lambda img: mwsd(img, 7)),
-    'mcwa16_25': (lambda img: mcwa(img, 25, 16)),
+    'mcwa16_25': (lambda img: get_mcwa(16, 25)(img)),
 }
 
 LABEL_NUMBERS = {
     'oil': 0,
     'sea': 1,
-    #'terrain': 2,  # not used
+    # 'terrain': 2,  # not used
 }
 
 
@@ -42,9 +42,9 @@ input_data_fps = \
 input_masks_fps = \
     [f for f in input_masks_fps if splitext(f)[-1] == '.jpg']
 input_data_fps = [join(SEGMENTATION_INPUT_DATA, f)
-                      for f in input_data_fps]
+                  for f in input_data_fps]
 input_masks_fps = [join(SEGMENTATION_INPUT_MASKS, f)
-                       for f in input_masks_fps]
+                   for f in input_masks_fps]
 
 
 for ncf in input_data_fps:
@@ -60,8 +60,8 @@ for ncf in input_data_fps:
         mask = np.array(Image.open(mask_fp))[:, :, 0]
         mask = np.where(mask > 128, True, False)
         mask_npoints = np.sum(mask)
-        oil_npoints, sea_npoints, city_npoints = 3 * [0]
-        has_oil, has_sea, has_city = 3 * [False]
+        oil_npoints = sea_npoints = terrain_npoints = 0
+        has_oil = has_sea = has_terrain = False
         if mask_name == 'oil':
             has_oil = True
             oil_mask = mask
@@ -70,11 +70,11 @@ for ncf in input_data_fps:
             has_sea = True
             sea_mask = mask
             sea_npoints = mask_npoints
-        elif mask_name == 'city':
-            has_city = True
-            city_mask = mask
-            city_npoints = mask_npoints
-    if not any([has_oil, has_sea, has_city]):  # if no jpg mask found
+        elif mask_name == 'terrain':
+            has_terrain = True
+            terrain_mask = mask
+            terrain_npoints = mask_npoints
+    if not any([has_oil, has_sea, has_terrain]):  # if no jpg mask found
         print(
             f'    None\n'
             f'Please add its masks to "{SEGMENTATION_INPUT_MASKS}".\n'
@@ -86,11 +86,11 @@ for ncf in input_data_fps:
     img = ncd['Sigma0_VV_db']  # (Sentinel-1 band name after db conversion)
     h, w = img.shape
 
-    total_points = oil_npoints + sea_npoints + city_npoints
+    total_points = oil_npoints + sea_npoints + terrain_npoints
     labels = np.empty(total_points)
     labels[:oil_npoints] = LABEL_NUMBERS['oil']
     labels[oil_npoints:oil_npoints+sea_npoints] = LABEL_NUMBERS['sea']
-    labels[oil_npoints+sea_npoints:total_points] = LABEL_NUMBERS['city']
+    labels[oil_npoints+sea_npoints:total_points] = LABEL_NUMBERS['terrain']
     np.save(join(SEGMENTATION_FEATURES_OUTPUT,
                  f'{base}_{mask_name}.npy'), labels)
     del(labels)
@@ -101,11 +101,11 @@ for ncf in input_data_fps:
             oil_points = resultimg[oil_mask]
         if has_sea:
             sea_points = resultimg[sea_mask]
-        if has_city:
-            city_points = resultimg[city_mask]
-        all_masked = np.concatenate([oil_points, sea_points, city_points])
+        if has_terrain:
+            terrain_points = resultimg[terrain_mask]
+        all_masked = np.concatenate([oil_points, sea_points, terrain_points])
         np.save(join(SEGMENTATION_FEATURES_OUTPUT,
                      f'{base}_{function_name}.npy'), all_masked)
         del(all_masked)
         del(oil_points)
-        del(city_points)
+        del(terrain_points)

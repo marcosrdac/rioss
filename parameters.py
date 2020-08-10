@@ -6,9 +6,9 @@ HOME = expanduser('~')  # get cross platform user folder
 
 # MODIFY ALL FOLDER VARIABLES BELOW IF NECESSARY
 
-# base folder for all modeling files
-#BASE = join(HOME, 'data')
-BASE = join(HOME, 'tmp', 'los', 'data')
+# Base folder for all modeling files
+# BASE = join(HOME, 'data')               # camobi
+BASE = join(HOME, 'tmp', 'los', 'data')  # home
 
 
 # GENERIC ORIGINAL NETCDF DATA FOLDER

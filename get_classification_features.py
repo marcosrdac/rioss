@@ -14,21 +14,44 @@ from parameters import CLASSIFICATION_INPUT_DATA, CLASSIFICATION_INPUT_MASKS, \
 from routines.functions import listifext, first_channel, sample_min_dist
 # temporary
 import matplotlib.pyplot as plt
+import matplotlib.patches as patches
 
 
-BLOCK_WINDOW_SIDE = 512
+# block side, half-side
+WS = 512
+HWS = int(WS//2)
 
 
 FUNCTIONS = {
     'val': (lambda img: img),
+    # ADD CREATED FUNCTIONS
 }
 
-LABEL_NUMBERS = {
-    'oil': 0,
-    'look_alike': 1,
-    'sea': 2,
-    'city': 3,
-}
+CATEGORIES = [
+    {
+        'name': 'oil',
+        'color': 'red',
+        'has_coords': False,
+        'coords': []
+    },
+    {
+        'name': 'lookalike',
+        'color': 'yellow',
+        'has_coords': False,
+        'coords': []
+    },
+    {
+        'name': 'sea',
+        'color': 'blue',
+        'has_coords': False,
+        'coords': []
+    },
+    {
+        'name': 'terrain',
+        'color': 'green',
+        'has_coords': False,
+        'coords': []},
+]
 
 # preconfiguration
 input_data_fps = listifext(CLASSIFICATION_INPUT_DATA, 'nc', fullpath=True)
@@ -40,44 +63,67 @@ for ncf in input_data_fps:
     # getting mask data
     base = splitext(basename(ncf))[0]
     mask_files = [f for f in input_masks_fps if base in f]
+
+    for c in CATEGORIES:
+        c['has_coords'] = False
+
     for mask_fp in mask_files:
         mask_name = re.findall(r'.*_([^_]*).jpg', mask_fp)[0]
         print(f'    - {mask_name} ({mask_fp})')
+
+        # get first channel of mask if it has more than one
         mask = first_channel(np.array(Image.open(mask_fp)))
-        sampled_mask_coords = sample_min_dist(mask, BLOCK_WINDOW_SIDE)
-        print(sampled_mask_coords)
-#        mask_npoints = np.sum(mask)
-#        oil_npoints, sea_npoints, city_npoints = 3 * [0]
-#        has_oil, has_sea, has_city = 3 * [False]
-#        if mask_name == 'oil':
-#            has_oil = True
-#            oil_mask = mask
-#            oil_npoints = mask_npoints
-#        elif mask_name == 'sea':
-#            has_sea = True
-#            sea_mask = mask
-#            sea_npoints = mask_npoints
-#        elif mask_name == 'city':
-#            has_city = True
-#            city_mask = mask
-#            city_npoints = mask_npoints
-#    if not any([has_oil, has_sea, has_city]):  # if no jpg mask found
-#        print(
-#            f'    None\n'
-#            f'Please add its masks to "{CLASSIFICATION_INPUT_MASKS}".\n'
-#            f'Skipping it.')
-#        continue
-#
-#    # opening ooriginal data
-#    ncd = nc.Dataset(ncf)
-#    img = ncd['Sigma0_VV_db']  # (Sentinel-1 band name after db conversion)
-#    h, w = img.shape
-#
-#    total_points = oil_npoints + sea_npoints + city_npoints
-#    labels = np.empty(total_points)
-#    labels[:oil_npoints] = LABEL_NUMBERS['oil']
-#    labels[oil_npoints:oil_npoints+sea_npoints] = LABEL_NUMBERS['sea']
-#    labels[oil_npoints+sea_npoints:total_points] = LABEL_NUMBERS['city']
+        # sample coordinates with min distance equals to a fraction of WS
+        sampled_mask_coords = sample_min_dist(mask, int(np.round(4/5*WS)))
+        # save results to categories
+        if sampled_mask_coords.size:  # if mask is not empty
+            for c in CATEGORIES:
+                if mask_name == c['name']:
+                    c['has_coords'] = True
+                    c['coords'] = sampled_mask_coords
+                    break
+        else:
+            print(f'    [ WARNING ] No points in "{mask_name}".')
+
+    # if no coordinates for masks are achieved
+    if not any([c['has_coords'] for c in CATEGORIES]):
+        print(
+            f'    None\n'
+            f'Please add its masks to "{CLASSIFICATION_INPUT_MASKS}".\n'
+            f'Skipping image.')
+        continue
+
+    # opening ooriginal data
+    ncd = nc.Dataset(ncf)
+    img = ncd['Sigma0_VV_db']  # (Sentinel-1 band name after db conversion)
+    h, w = img.shape
+
+    fig, ax = plt.subplots()
+    ax.imshow(img)
+    ax.imshow(mask, alpha=.1)
+    for c in CATEGORIES:
+        if c['has_coords']:
+            for yc, xc in zip(c['coords'][:, 0], c['coords'][:, 1]):
+                y0, x0 = (i-HWS for i in (yc, xc))
+                print(y0, x0)
+                rect = patches.Rectangle((x0, y0), WS, WS,
+                                         linewidth=1, edgecolor=c['color'],
+                                         facecolor='none')
+                ax.add_patch(rect)
+                ax.scatter(xc, yc, color=c['color'])
+    plt.show()
+
+    total_coords = np.sum([c['coords'].shape[0]
+                           for c in CATEGORIES
+                           if c['has_coords']])
+    categories = np.empty(total_coords, dtype=int)
+    cur = 0
+    for C, c in enumerate(CATEGORIES):
+        if c['has_coords']:
+            n = c['coords'].shape[0]
+            categories[cur:cur+n] = C
+            cur += n
+    print(categories)
 #    np.save(join(CLASSIFICATION_FEATURES_OUTPUT,
 #                 f'{base}_{mask_name}.npy'), labels)
 #    del(labels)
@@ -88,11 +134,11 @@ for ncf in input_data_fps:
 #            oil_points = resultimg[oil_mask]
 #        if has_sea:
 #            sea_points = resultimg[sea_mask]
-#        if has_city:
-#            city_points = resultimg[city_mask]
-#        all_masked = np.concatenate([oil_points, sea_points, city_points])
+#        if has_terrain:
+#            terrain_points = resultimg[terrain_mask]
+#        all_masked = np.concatenate([oil_points, sea_points, terrain_points])
 #        np.save(join(CLASSIFICATION_FEATURES_OUTPUT,
 #                     f'{base}_{function_name}.npy'), all_masked)
 #        del(all_masked)
 #        del(oil_points)
-#        del(city_points)
+#        del(terrain_points)

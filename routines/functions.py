@@ -37,7 +37,7 @@ def first_channel(img):
 
 def sample_min_dist(bool_arr, dist, sample=.1, skip='auto'):
     if skip == 'auto':
-        skip = dist
+        skip = dist//2
     pts = np.stack(np.where(bool_arr), axis=1)[::skip].copy()
     N = pts.shape[0]
     accepted = np.ones(N, dtype=bool)
