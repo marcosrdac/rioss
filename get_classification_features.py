@@ -3,19 +3,20 @@
 
 # DEPENDENCIES
 import re
-from os import listdir
 from os.path import splitext, join, basename
 import numpy as np
 import netCDF4 as nc
 from PIL import Image
 # DEFINED
-from parameters import CLASSIFICATION_INPUT_DATA, CLASSIFICATION_INPUT_MASKS, \
-    CLASSIFICATION_BLOCKS_OUTPUT, CLASSIFICATION_FEATURES_OUTPUT
 from routines.functions import discarray, listifext, first_channel, \
     sample_min_dist
-# temporary
-import matplotlib.pyplot as plt
-import matplotlib.patches as patches
+from parameters import CLASSIFICATION_INPUT_DATA, \
+                       CLASSIFICATION_INPUT_MASKS, \
+                       CLASSIFICATION_BLOCKS_OUTPUT, \
+                       CLASSIFICATION_FEATURES_OUTPUT
+# debugging
+# import matplotlib.pyplot as plt
+# import matplotlib.patches as patches
 
 
 # PRECONFIGURATION
@@ -99,12 +100,17 @@ for ncf in input_data_fps:
             f'Skipping image.')
         continue
 
-    # opening ooriginal data
+    # getting total number of coordinates
+    ncoords = np.sum([c['coords'].shape[0]
+                      for c in CATEGORIES
+                      if c['has_coords']])
+
+    # opening original data
     ncd = nc.Dataset(ncf)
     img = ncd['Sigma0_VV_db']  # (Sentinel-1 band name after db conversion)
     h, w = img.shape
 
-    # # debugging blocks
+    # --- debugging blocks (looking at their positions) --- #
     # fig, ax = plt.subplots()
     # ax.imshow(img)
     # for c in CATEGORIES:
@@ -119,14 +125,10 @@ for ncf in input_data_fps:
     #             ax.scatter(xc, yc, color=c['color'])
     # plt.show()
 
-    # getting total number of coordinates
-    ncoords = np.sum([c['coords'].shape[0]
-                      for c in CATEGORIES
-                      if c['has_coords']])
-
-    # saving block labels
+    # --- saving block labels (comment if not needed) --- #
     labels_filename = join(CLASSIFICATION_FEATURES_OUTPUT,
                            f'{base}_labels.bin')
+
     categories = discarray(labels_filename, 'w+', np.int32, ncoords)
     cur = 0
     for C, c in enumerate(CATEGORIES):
@@ -135,7 +137,7 @@ for ncf in input_data_fps:
             categories[cur:cur+n] = C
             cur += n
 
-    # saving block features
+    # --- saving block features (comment if not needed) --- #
     for feature in FEATURES:
         feature_filename = join(CLASSIFICATION_FEATURES_OUTPUT,
                                 f"{base}_{feature['name']}.bin")
@@ -162,7 +164,7 @@ for ncf in input_data_fps:
                 feature["values"][cur] = feature_val
                 cur += 1
 
-    # saving blocks themselves
+    # --- saving blocks themselves (comment if not needed) --- #
     cur = 0
     for c in CATEGORIES:
         if c['has_coords']:
