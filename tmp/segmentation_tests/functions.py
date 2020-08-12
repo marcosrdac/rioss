@@ -1,1 +1,0 @@
-/home/marcosrdac/Dropbox/projects/riooss/routines/functions.py

@@ -1,10 +1,6 @@
 #!/usr/bin/env python
 
 
-# NECESSARY TODO
-#   update FUNCTIONS to get_mwa(r) description
-
-
 # DEPENDENCIES
 import re
 from os import listdir

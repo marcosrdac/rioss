@@ -1,3 +1,5 @@
+import time
+import functools
 from os import listdir
 from os.path import join
 import numpy as np
@@ -26,6 +28,26 @@ def discarray(filename, mode='r', dtype=float, shape=None):
         offset = io.tell()
         arr = np.memmap(io, dtype=dtype, mode=mode, offset=offset, shape=shape)
         return(arr)
+
+
+def timer(func):
+    """Print runtime of the decorated function"""
+    @functools.wraps(func)
+    def wrapper_timer(*args, **kwargs):
+        start_time = time.perf_counter()
+        value = func(*args, **kwargs)
+        end_time = time.perf_counter()
+        run_time = end_time - start_time
+        print(f"Finished {func.__name__!r} in {run_time:.4f} secs")
+        return value
+    return wrapper_timer
+
+
+def normalize01(array):
+    minval = array.min()
+    maxval = array.max()
+    norm_array = (array - minval) / (maxval - minval)
+    return(norm_array)
 
 
 def listifext(folder, exts=None, fullpath=False):
@@ -70,7 +92,7 @@ def sample_min_dist(bool_arr, dist, sample=.1, skip='auto'):
     return(sampled_pts)
 
 
-@jit(parallel=True, nopython=True, boundscheck=False, cache=True)
+@jit(parallel=True, nopython=True, boundscheck=False)
 def pad_const(img, pad_radii, const=0):
     pady = pad_radii[0]
     padx = pad_radii[1]
@@ -119,7 +141,7 @@ def pad_const(img, pad_radii, const=0):
     return(_img)
 
 
-@jit(parallel=True, nopython=True, boundscheck=False, cache=True)
+@jit(parallel=True, nopython=True, boundscheck=False)
 def pad_borders(img, pad_radii):
     pady = pad_radii[0]
     padx = pad_radii[1]
@@ -168,7 +190,7 @@ def pad_borders(img, pad_radii):
     return(_img)
 
 
-@jit(parallel=True, nopython=True, boundscheck=False, cache=True)
+@jit(parallel=True, nopython=True, boundscheck=False)
 def pad_symmetric(img, pad_radii):
     # def pad_symmetric(img, pad_radii):
     pady = pad_radii[0]
@@ -218,7 +240,7 @@ def pad_symmetric(img, pad_radii):
     return(_img)
 
 
-@jit(nopython=True, cache=True)
+@jit(nopython=True)
 def pad(arr, pad_radii, mode='const', const=0):
     if mode == 'const':
         _arr = pad_const(arr, pad_radii, const)

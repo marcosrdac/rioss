@@ -19,21 +19,20 @@ def validate_index(values, x=None):
     return(index)
 
 
-# From https://github.com/rougier/numpy-100 (#87)
-def boxcount(img, k):
-    S = np.add.reduceat(
-        np.add.reduceat(img, np.arange(0, img.shape[0], k), axis=0),
-        np.arange(0, img.shape[1], k), axis=1)
-    # We count non-empty (0) and non-full boxes (k*k)
-    return len(np.where((S > 0) & (S < k*k))[0])
-
-
 # Modified from:
 #   https://gist.github.com/viveksck/1110dfca01e4ec2c608515f0d5a5b1d1
 def fractal_dimension(img, threshold=0.5):
     '''
     Calculates Minkowski–Bouligand fractal dimension of a 2D array.
     '''
+
+    def boxcount(img, k):
+        S = np.add.reduceat(
+                np.add.reduceat(img, np.arange(0, img.shape[0], k), axis=0),
+                            np.arange(0, img.shape[1], k), axis=1)
+        # We count non-empty (0) and non-full boxes (k*k)
+        return len(np.where((S > 0) & (S < k*k))[0])
+
     img = normalize01(img)
 
     # Only for 2d image
@@ -61,8 +60,8 @@ def fractal_dimension(img, threshold=0.5):
 
     counts = np.array(counts)
     sizes = np.array(sizes)
-    #plt.plot(sizes, counts)
-    #plt.show()
+    # plt.plot(sizes, counts)
+    # plt.show()
 
     # Fit the successive log(sizes) with log (counts)
     coeffs = np.polyfit(np.log(sizes), np.log(counts), 1)
