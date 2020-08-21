@@ -9,7 +9,7 @@ from numba import jit, prange
 from tqdm import tqdm
 from PIL import Image
 
-from utils import timer, normalize01
+from .functions import timer, normalize01
 
 
 def validate_index(values, x=None):
@@ -23,6 +23,8 @@ def validate_index(values, x=None):
 
 
 def entropy(img, base=None):
+    if isinstance(img, np.ma.MaskedArray):
+        img = img.compressed()
     entropy = sequence_entropy(img.flat, base=base)
     return(entropy)
 

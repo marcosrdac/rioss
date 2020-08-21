@@ -1,10 +1,11 @@
 #!/usr/bin/env python
 
 
-# DEPENDENCIES
+# INTERNAL DEPENDENCIES
 import re
 from os import listdir
 from os.path import splitext, join, basename
+# EXTERNAL DEPENDENCIES
 import numpy as np
 import netCDF4 as nc
 from PIL import Image

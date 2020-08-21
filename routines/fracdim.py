@@ -8,7 +8,7 @@ import seaborn as sns
 import semivariogram
 import psd
 import boxcounting
-from utils import normalize01
+from .functions import normalize01
 
 
 if __name__ == '__main__':

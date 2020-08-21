@@ -6,7 +6,7 @@ from scipy import ndimage
 from numba import jit, prange
 from tqdm import tqdm
 from PIL import Image
-from utils import timer, normalize01
+from .functions import timer, normalize01
 
 
 def validate_index(values, x=None):

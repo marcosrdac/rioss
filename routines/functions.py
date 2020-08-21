@@ -30,6 +30,34 @@ def discarray(filename, mode='r', dtype=float, shape=None):
         return(arr)
 
 
+def get_block_corners(yc, xc, ws):
+    yi, xi = yc-ws//2, xc-ws//2
+    yf, xf = yi+ws, xi+ws
+    return((yi, xi), (yf, xf))
+
+
+def adjust_block_center_get_corners(yc, xc, ws, h, w):
+    (yi, xi), (yf, xf) = get_block_corners(yc, xc, ws)
+    new_yc, new_xc = yc, xc
+    if h >= ws:
+        if yi < 0:
+            new_yc -= yi
+        if yf >= h:
+            new_yc -= (yf-h)
+    if w >= ws:
+        if xi < 0:
+            new_xc -= xi
+        if xf >= w:
+            new_xc -= (xf-w)
+    if yc == new_yc and xc == new_xc:
+        modified = False
+    else:
+        modified = True
+        (yi, xi), (yf, xf) = get_block_corners(new_yc, new_xc, ws)
+
+    return(modified, (new_yc, new_xc), (yi, xi), (yf, xf))
+
+
 def timer(func):
     """Print runtime of the decorated function"""
     @functools.wraps(func)
@@ -65,7 +93,8 @@ def listifext(folder, exts=None, fullpath=False):
 
 def first_channel(img):
     if len(img.shape) == 3:
-        channel = np.squeeze(np.split(img, img.shape[-1], -1), axis=-1)
+        channel = img[:, :, 0]
+        #channel = np.squeeze(np.split(img, img.shape[-1], -1), axis=-1)
     elif len(img.shape) == 2:
         channel = img
     else:

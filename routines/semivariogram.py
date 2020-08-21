@@ -6,7 +6,7 @@ from scipy import ndimage
 from numba import jit, prange
 from tqdm import tqdm
 from PIL import Image
-from utils import timer
+from .functions import timer
 
 
 #@timer

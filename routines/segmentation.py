@@ -8,10 +8,14 @@ from pickle import loads
 import matplotlib.pyplot as plt
 from os import listdir, makedirs
 from os.path import expanduser, isdir, splitext, join, basename
-from functions import get_mwa, get_mrwa, mwsd
+from .functions import get_mwa, get_mrwa, mwsd
 
+if __name__ == '__main__':
+    ROOT = '..'
+else:
+    ROOT = '.'
 
-MODELS = join('..', 'models')
+MODELS = join(ROOT, 'models')
 MODEL_NAME = 'segmentation_val_mwa15_mwsd15_mrwa1625_ARCH_5_1_5'
 SEGMENTATION_MODEL = join(MODELS, f'{MODEL_NAME}.h5')
 SEGMENTATION_MODEL_SCALER = join(MODELS, f'{MODEL_NAME}_scaler')
@@ -49,21 +53,23 @@ FEATURES = [
 
 
 def segmentate(img):
-
     def calculate_features(img):
         n_functions = len(FEATURES)
         feats = np.empty((img.size, n_functions))
-        print('function_name:')
         for i, feature in enumerate(FEATURES):
-            print(f"{feature['name']}")
+            print(f"    Calculating: {feature['name']}")
             feats[:, i] = feature['function'](img).flatten()
         return(feats)
 
-    # print('segmentation')
+    # Add verbose option
+
+    print(f"    Calculating block features.")
     X = calculate_features(img)
+    print(f"    Dealing with NaNs.")
     X = np.where(np.isnan(X), 0, X)  # check if it's okay
+    print(f"    Scaling data.")
     X = segmentation_model_scaler.transform(X)
-    # print('actually predicting')
+    print(f"    Perfforming segmentation of block.")
     y = np.argmax(segmentation_model.predict(X), 1)
     return(y.reshape(img.shape))
 

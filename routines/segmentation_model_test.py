@@ -3,27 +3,11 @@ from tqdm import tqdm
 from os import listdir
 from os.path import join, basename
 import matplotlib.pyplot as plt
-from functions import normalize01
+from .functions import discarray, normalize01
 import numpy as np
 import boxcounting
 from segmentation import segmentate
 import semivariogram
-
-
-def discarray(filename, mode='r', dtype=float, shape=None):
-    file_mode = f'{mode[0]}b{mode[1:]}'
-    if not isinstance(shape, tuple):
-        shape = (shape,)
-    with open(filename, file_mode) as io:
-        if 'w' in mode:
-            ndims_shape = np.array((len(shape), *shape), dtype=np.int64)
-            ndims_shape.tofile(io)
-        if 'r' in mode:
-            ndims = np.fromfile(io, dtype=np.int64, count=1)[0]
-            shape = tuple(np.fromfile(io, dtype=np.int64, count=ndims))
-        offset = io.tell()
-        arr = np.memmap(io, dtype=dtype, mode=mode, offset=offset, shape=shape)
-    return(arr)
 
 
 dir = "/mnt/hdd/home/tmp/los/data/classification_blocks"
