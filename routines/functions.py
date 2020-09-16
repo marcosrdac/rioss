@@ -10,11 +10,12 @@ import matplotlib.pyplot as plt
 from matplotlib.pyplot import imshow
 from scipy.fftpack import fftn
 from scipy.ndimage.filters import laplace, gaussian_filter
+from skimage.feature import greycomatrix, greycoprops
 from scipy.signal import convolve2d
 from scipy.spatial import KDTree
 
 
-def discarray(filename, mode='r', dtype=float, shape=None):
+def discarray(filename, mode='r', dtype=float, shape=None, order='C'):
     file_mode = f'{mode[0]}b{mode[1:]}'
     if not isinstance(shape, tuple):
         shape = (shape,)
@@ -26,8 +27,9 @@ def discarray(filename, mode='r', dtype=float, shape=None):
             ndims = np.fromfile(io, dtype=np.int64, count=1)[0]
             shape = tuple(np.fromfile(io, dtype=np.int64, count=ndims))
         offset = io.tell()
-        arr = np.memmap(io, dtype=dtype, mode=mode, offset=offset, shape=shape)
-        return(arr)
+        arr = np.memmap(io, mode=mode, dtype=dtype, shape=shape,
+                        offset=offset, order=order)
+    return(arr)
 
 
 def get_block_corners(yc, xc, ws):
@@ -71,11 +73,52 @@ def timer(func):
     return wrapper_timer
 
 
-def normalize01(array):
-    minval = array.min()
-    maxval = array.max()
-    norm_array = (array - minval) / (maxval - minval)
+def normalize01(arr):
+    minval = arr.min()
+    maxval = arr.max()
+    norm_array = (arr - minval) / (maxval - minval)
     return(norm_array)
+
+
+def span_between(arr, vmin=0, vmax=1, dtype=None):
+    _arr = vmin + (vmax - vmin) * normalize01(arr)
+    if dtype is not None:
+        _arr = dtype(_arr)
+    return _arr
+
+
+def unsigned_span(img, dtype=np.uint8):
+    max_repr = 2**(8*np.dtype(dtype).itemsize)-1
+    _img = span_between(img, vmin=0, vmax=max_repr, dtype=dtype)
+    return _img
+
+
+def get_glcm(img, distances=None, angles=None):
+    if distances is None:
+        distances = np.unique(
+            np.arange(1, np.min(img.shape), 6, dtype=np.int64)
+        )
+    if angles is None:
+        angles = [0, np.pi/2, np.pi/4]
+    uimg = unsigned_span(img)
+    glcm = greycomatrix(uimg, distances=distances, angles=angles, normed=True)
+    return(glcm)
+
+
+def get_correlation(glcm):
+    return greycoprops(glcm, "correlation")[0, :].mean()
+
+
+def get_dissimilarity(glcm):
+    return greycoprops(glcm, "dissimilarity")[0, :].mean()
+
+
+def get_homogeneity(glcm):
+    return greycoprops(glcm, "homogeneity")[0, :].mean()
+
+
+def get_energy(glcm):
+    return greycoprops(glcm, "energy")[0, :].mean()
 
 
 def listifext(folder, exts=None, fullpath=False):

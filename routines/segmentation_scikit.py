@@ -17,7 +17,7 @@ else:
     ROOT = '.'
 
 MODELS = join(ROOT, 'models')
-MODEL_NAME = 'segmentation_gmm_mwa15_LABELS_1_0.bin'
+MODEL_NAME = '../models/segmentation_test_mwa3_mwa15_gmm.bin'
 SEGMENTATION_MODEL = join(MODELS, MODEL_NAME)
 # SEGMENTATION_MODEL_SCALER = join(MODELS, f'{MODEL_NAME}_scaler')
 
@@ -30,6 +30,10 @@ FEATURES = [
         # 'name': 'val',
         # 'function': lambda img: img,
     # },
+    {
+        'name': 'mwa3x3',
+        'function': lambda img: get_mwa(1)(img),
+    },
     {
         'name': 'mwa15x15',
         'function': lambda img: get_mwa(7)(img),
@@ -62,6 +66,7 @@ def segmentate(img):
     # X = segmentation_model_scaler.transform(X)
     print(f"    Perfforming segmentation of block.")
     y = segmentation_model.predict(X)
+    y[y==2] = 0
     return(y.reshape(img.shape))
 
 
@@ -73,17 +78,16 @@ if __name__ == '__main__':
     ncvar = ncd.variables['Sigma0_VV_db']
     var = np.array(ncvar)
 
-    import seaborn as sns
-    sns.distplot(get_mwa(7)(var).flatten())
+    # import seaborn as sns
+    # sns.distplot(get_mwa(7)(var).flatten())
+    # plt.show()
+
+
+    segmented = segmentate(var)
+
+    fig, axes = plt.subplots(1, 2, dpi=300, figsize=(10, 4))
+    axes[0].imshow(var)
+    axes[1].imshow(segmented)
+    fig.tight_layout()
+    fig.savefig('segmodel_5_2_1_5_10.png')
     plt.show()
-
-
-#    segmented = segmentate(var)
-#
-#    fig, axes = plt.subplots(1, 2, dpi=300, figsize=(10, 4))
-#    axes[0].imshow(var)
-#    axes[1].imshow(segmented)
-#    fig.tight_layout()
-#    fig.savefig('segmodel_5_2_1_5_10.png')
-#    plt.show()
-#
