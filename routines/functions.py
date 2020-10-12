@@ -73,6 +73,36 @@ def timer(func):
     return wrapper_timer
 
 
+def lacunarity(img, ratios=None):
+    def box_lacunarity(box):
+        mean = box.mean()
+        std = box.std()
+        return np.square(std/mean)
+    h, w = img.shape
+    min_dim = np.min(img.shape)
+    if ratios is None:
+        stop = np.int(np.round(np.log2(min_dim)))-4
+        ratios = 1/np.power(2, np.arange(0, stop))
+    lacunarity = 0.
+    n_sizes = len(ratios)
+    for r in ratios:
+        dh = int(np.ceil(r*h))
+        dw = int(np.ceil(r*w))
+        n = int(np.round(1/r))
+        size_lacunarity_sum = 0
+        n_boxes = 0
+        for i in range(n):
+            for j in range(n):
+                box = img[i*dh:(i+1)*dh, j*dw:(j+1)*dw]
+                _lacunarity = box_lacunarity(box)
+                if _lacunarity != np.nan:
+                    size_lacunarity_sum += _lacunarity
+                    n_boxes += 1
+        lacunarity += size_lacunarity_sum/n_boxes
+    lacunarity /= n_sizes
+    return lacunarity
+
+
 def normalize01(arr):
     minval = arr.min()
     maxval = arr.max()
