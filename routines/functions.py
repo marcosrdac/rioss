@@ -13,6 +13,7 @@ from scipy.ndimage.filters import laplace, gaussian_filter
 from skimage.feature import greycomatrix, greycoprops
 from scipy.signal import convolve2d
 from scipy.spatial import KDTree
+from scipy.stats import skew, kurtosis
 
 
 def discarray(filename, mode='r', dtype=float, shape=None, order='C'):
@@ -71,6 +72,21 @@ def timer(func):
         print(f"Finished {func.__name__!r} in {run_time:.4f} secs")
         return value
     return wrapper_timer
+
+
+def apply_over_masked(img, mask, function=np.mean):
+    masked_pixels = img[mask]
+    return function(masked_pixels)
+
+
+def perimeter(arr):
+    Dy, Dx = np.gradient(arr)
+    intensity2 = np.square(Dy) + np.square(Dx)
+    return np.sum(~np.isclose(intensity2, 0.))
+
+
+def area(arr):
+    return np.sum(arr)
 
 
 def lacunarity(img, ratios=None):
