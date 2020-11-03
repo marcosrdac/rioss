@@ -8,10 +8,10 @@ from pickle import loads
 import matplotlib.pyplot as plt
 from os import listdir, makedirs
 from os.path import expanduser, isdir, splitext, join, basename
-from .functions import get_mwa, get_mrwa, mwsd
+from routines.functions import discarray, get_mwa, get_mrwa, mwsd
 
 if __name__ == '__main__':
-    ROOT = '..'
+    ROOT = '.'
 else:
     ROOT = '.'
 
@@ -71,11 +71,27 @@ def segmentate(img):
     X = segmentation_model_scaler.transform(X)
     print(f"    Perfforming segmentation of block.")
     y = np.argmax(segmentation_model.predict(X), 1)
-    return(y.reshape(img.shape))
+    y = 1 - y  # CORRECTING INVERSE MODEL LABELS (oil=0 --> oil=1)
+    return y.reshape(img.shape)
 
 
 if __name__ == '__main__':
-    pass
+    # pass
+    from random import shuffle
+    folder = '/mnt/hdd/home/tmp/los/data/classification_blocks'
+    files = [join(folder, f) for f in listdir(folder)]
+    # shuffle(files)
+    for f in files:
+        img = discarray(f)
+        segmented = segmentate(img)
+
+        plt.subplot(121)
+        plt.imshow(img)
+        plt.subplot(122)
+        plt.imshow(segmented)
+
+        plt.show()
+
 
     #print('\n'*80)
     #print('starting')

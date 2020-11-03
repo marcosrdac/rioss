@@ -51,10 +51,6 @@ CLASSIFICATION_CATEGORIES = [
         'name': 'oil',
         'color': 'red',
     },
-    # {
-        # 'name': 'lookalike',
-        # 'color': 'yellow',
-    # },
     {
         'name': 'sea',
         'color': 'blue',
@@ -75,6 +71,10 @@ CLASSIFICATION_CATEGORIES = [
         'name': 'wind',
         'color': 'indigo',
     },
+    # {
+        # 'name': 'lookalike',
+        # 'color': 'yellow',
+    # },
 ]
 
 # please don't use spaces in the abbreviation (abbrv)

@@ -6,7 +6,6 @@ from scipy import ndimage
 from numba import jit, prange
 from tqdm import tqdm
 from PIL import Image
-from .functions import timer
 
 
 def fourier_transform(img):
