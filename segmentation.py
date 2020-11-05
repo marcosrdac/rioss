@@ -46,12 +46,6 @@ FEATURES = [
 ]
 
 
-# LABELS = {
-#     0: 'oil',
-#     1: 'sea',
-# }
-
-
 def segmentate(img):
     def calculate_features(img):
         n_functions = len(FEATURES)
@@ -70,8 +64,8 @@ def segmentate(img):
     print(f"    Scaling data.")
     X = segmentation_model_scaler.transform(X)
     print(f"    Perfforming segmentation of block.")
-    y = np.argmax(segmentation_model.predict(X), 1)
-    y = 1 - y  # CORRECTING INVERSE MODEL LABELS (oil=0 --> oil=1)
+    y = np.argmax(segmentation_model.predict(X), axis=1)
+    # y = 1 - y  # CORRECTING OPOSITE MODELS (fg=0 --> fg=1)
     return y.reshape(img.shape)
 
 

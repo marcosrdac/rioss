@@ -11,7 +11,7 @@ from PIL import Image
 # DEFINED
 from routines.functions import discarray, listifext, first_channel, \
     sample_min_dist, get_block_corners, adjust_block_center_get_corners
-from routines.segmentation import segmentate
+from segmentation import segmentate
 from parameters import CLASSIFICATION_INPUT_DATA, \
     CLASSIFICATION_INPUT_MASKS, \
     CLASSIFICATION_BLOCKS_OUTPUT, \
@@ -116,7 +116,7 @@ for ncf in input_data_fps:
   
     # --- saving block labels (comment if not needed) --- #
     labels_filename = join(CLASSIFICATION_FEATURES_OUTPUT,
-                           f'{base}_labels.bin')
+                           f'{base}_label.bin')
 
     categories = discarray(labels_filename, 'w+', np.int64, ncoords)
     cur = 0
@@ -135,7 +135,6 @@ for ncf in input_data_fps:
             feature_filename, 'w+', np.float64, ncoords)
 
     cur = 0
-
     for c in CLASSIFICATION_CATEGORIES:
         if c['has_coords']:
             # defining block
@@ -159,18 +158,18 @@ for ncf in input_data_fps:
                 print()
                 cur += 1
 
-    # --- saving blocks themselves (comment if not needed) --- #
-    cur = 0
-    for c in CLASSIFICATION_CATEGORIES:
-        if c['has_coords']:
-            # defining block
-            for yc, xc in zip(c['coords'][:, 0],
-                              c['coords'][:, 1]):
-                (yi, xi), (yf, xf) = get_block_corners(yc, xc, WS)
-                block_filename = join(CLASSIFICATION_BLOCKS_OUTPUT,
-                                      f"{base}_block_{cur}.bin")
-                block_file = discarray(block_filename, 'w+', np.float64,
-                                       block.shape)
-                block = img[yi:yf, xi:xf]
-                block_file[...] = block
-                cur += 1
+#    # --- saving blocks themselves (comment if not needed) --- #
+#    cur = 0
+#    for c in CLASSIFICATION_CATEGORIES:
+#        if c['has_coords']:
+#            # defining block
+#            for yc, xc in zip(c['coords'][:, 0],
+#                              c['coords'][:, 1]):
+#                (yi, xi), (yf, xf) = get_block_corners(yc, xc, WS)
+#                block_filename = join(CLASSIFICATION_BLOCKS_OUTPUT,
+#                                      f"{base}_block_{cur}.bin")
+#                block_file = discarray(block_filename, 'w+', np.float64,
+#                                       block.shape)
+#                block = img[yi:yf, xi:xf]
+#                block_file[...] = block
+#                cur += 1
