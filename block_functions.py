@@ -7,7 +7,7 @@ import routines.boxcounting as boxcounting
 
 
 def std(img, seg, glcm, segglcm):
-    return np.nanstd(img)
+    return np.std(img)
 
 
 def skew(img, seg, glcm, segglcm):
@@ -27,7 +27,7 @@ def bgmean(img, seg, glcm, segglcm):
 
 
 def fgstd(img, seg, glcm, segglcm):
-    return apply_over_masked(img, seg, np.nanstd)
+    return apply_over_masked(img, seg, np.std)
 
 
 def fgrelarea(img, seg, glcm, segglcm):

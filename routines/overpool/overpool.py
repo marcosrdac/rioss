@@ -24,7 +24,7 @@ def overlapping_pool(img, whs=2, pool_func=np.std, give_window=False, pool_func_
     if rows%whs != 0: extra_row=1
     if cols%whs != 0: extra_col=1
     pooling_layer = np.empty((pool_rows+extra_row, pool_cols+extra_col))
-    # pooling function calcylated at every window
+    # pooling function calculated at every window
     for xpi in range(pool_cols):
         xi = whs*xpi
         xf = xi + ws
@@ -49,4 +49,4 @@ def overlapping_pool(img, whs=2, pool_func=np.std, give_window=False, pool_func_
             subimg = img[yi:yf,-ws:]
             window_kw = {'window':((yi,yf),(xi,xf))} if give_window else {}
             pooling_layer[ypi, xpi] = pool_func(subimg, **window_kw, **pool_func_kw)
-    return(pooling_layer)
+    return pooling_layer

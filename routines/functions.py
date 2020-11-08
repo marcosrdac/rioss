@@ -74,8 +74,9 @@ def timer(func):
     return wrapper_timer
 
 
+# note: the flatten() has great effect over big arrays...
 def apply_over_masked(img, mask, function=np.mean):
-    masked_pixels = img[mask]
+    masked_pixels = img.flatten()[mask.flatten()]
     return function(masked_pixels)
 
 

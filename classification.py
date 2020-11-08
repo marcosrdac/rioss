@@ -22,6 +22,7 @@ CLASSIFICATION_FEATURE_NAMES = join(MODELS, FEATURE_NAMES_NAME)
 
 with open(CLASSIFICATION_MODEL, 'rb') as f:
     classification_model = loads(f.read())
+    classification_model.n_jobs = -1
 
 with open(CLASSIFICATION_FEATURE_NAMES, 'rb') as f:
     FEATURE_NAMES = loads(f.read())
@@ -36,7 +37,7 @@ FEATURES = [{'name': name, 'function': BLOCK_FUNCTIONS[name]}
 
 print(FEATURES)
 
-def classificate(img):
+def classify(img):
     def calculate_features(img):
         n_functions = len(FEATURES)
         feats = np.empty(n_functions)
@@ -47,7 +48,7 @@ def classificate(img):
         for i, feature in enumerate(FEATURES):
             print(f"    Calculating: {feature['name']}")
             feats[i] = feature['function'](img, segmented, glcm, segglcm)
-            print(feats[i])
+            # print(feats[i])
         return(feats)
 
     # return calculate_features(img)
@@ -73,7 +74,7 @@ if __name__ == '__main__':
     shuffle(files)
     for f in files:
         img = discarray(f)
-        c = classificate(img)
+        c = classify(img)
 
         plt.suptitle(basename(f))
         plt.title(f'{CLASSIFICATION_CATEGORIES[int(c)]["name"]}')
