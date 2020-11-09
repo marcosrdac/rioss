@@ -8,7 +8,8 @@ from scipy.stats import skew, kurtosis
 from pickle import loads
 from routines.functions import discarray
 from routines.functions import lacunarity, perimeter, area, get_glcm
-from segmentation import segmentate
+# from segmentation import segmentate
+from thresh_segmentation import segmentate
 from block_functions import BLOCK_FUNCTIONS
 from parameters import CLASSIFICATION_CATEGORIES
 
@@ -35,7 +36,7 @@ FEATURE_NAMES = ['std', 'skew', 'kurt', 'fgmean', 'bgmean', 'fgstd',
 FEATURES = [{'name': name, 'function': BLOCK_FUNCTIONS[name]}
                  for name in FEATURE_NAMES]
 
-print(FEATURES)
+# print(FEATURES)
 
 def classify(img):
     def calculate_features(img):

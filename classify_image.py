@@ -8,7 +8,7 @@ from pickle import loads
 import matplotlib.pyplot as plt
 import seaborn as sns
 from routines.functions import discarray, get_mwa, get_mrwa, mwsd
-from routines.overpool.overpool import overlapping_pool as overpool
+from routines.overpool import overlapping_pool
 from classification import classify
 
 
@@ -46,7 +46,7 @@ for f in files:
     plt.imshow(img, aspect="equal")
     plt.subplot(122)
     # plt.suptitle(basename(f))
-    pool = overpool(img, 512, classify)
+    pool = overlapping_pool(img, 512, classify)
     _pool = discarray(f'{basename(f)}.bin', mode="w+",
                       dtype=int, shape=pool.shape)
     _pool[...] = pool[...]

@@ -11,7 +11,8 @@ from PIL import Image
 # DEFINED
 from routines.functions import discarray, listifext, first_channel, \
     sample_min_dist, get_block_corners, adjust_block_center_get_corners
-from segmentation import segmentate
+# from segmentation import segmentate
+from thresh_segmentation import segmentate
 from parameters import CLASSIFICATION_INPUT_DATA, \
     CLASSIFICATION_INPUT_MASKS, \
     CLASSIFICATION_BLOCKS_OUTPUT, \
