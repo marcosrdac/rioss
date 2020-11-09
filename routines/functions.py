@@ -140,6 +140,36 @@ def unsigned_span(img, dtype=np.uint8):
     return _img
 
 
+def grad(img, sigma=3):
+    _img = gaussian_filter(img, sigma)
+
+    grad = np.stack(np.gradient(_img), 2)
+    grad = np.hypot(grad[..., 0], grad[..., 1])
+    return grad
+
+
+def lap(img, sigma=7):
+    _img = gaussian_filter(img, sigma)
+    lap = np.abs(laplace(_img))
+    return lap
+
+
+def grad_max(img, sigma=3):
+    return np.max(grad(img, sigma))
+
+
+def grad_mean(img, sigma=3):
+    return np.mean(grad(img, sigma))
+
+
+def grad_median(img, sigma=3):
+    return np.median(grad(img, sigma))
+
+
+def lap_max(img, sigma=7):
+    return np.median(lap(img, sigma))
+
+
 def get_glcm(img, distances=None, angles=None):
     if distances is None:
         distances = np.unique(

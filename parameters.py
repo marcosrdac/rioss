@@ -44,7 +44,7 @@ CLASSIFICATION_INPUT_MASKS = join(BASE, 'classification_masks')
 CLASSIFICATION_BLOCKS_OUTPUT = join(BASE, 'classification_blocks')
 CLASSIFICATION_FEATURES_OUTPUT = join(BASE, 'classification_model_features')
 
-WS = 1024
+WS = 512
 
 CLASSIFICATION_CATEGORIES = [
     {
@@ -72,8 +72,8 @@ CLASSIFICATION_CATEGORIES = [
         'color': 'indigo',
     },
     # {
-        # 'name': 'lookalike',
-        # 'color': 'yellow',
+    # 'name': 'lookalike',
+    # 'color': 'yellow',
     # },
 ]
 
@@ -95,7 +95,7 @@ CLASSIFICATION_FEATURES = [
         'name': 'semivariogram fractal dimension',
         'abbrv': 'svfd',
         'function': (lambda img, segmented:
-                     semivariogram.fractal_dimension(img, 1/10)),
+                     semivariogram.fractal_dimension(img, 5/100)),
     },
     {
         'name': 'shannon entropy',
@@ -256,6 +256,34 @@ CLASSIFICATION_FEATURES = [
         'abbrv': 'kurt',
         'function': (lambda img, segmented:
                      kurtosis(img.flatten())),
+    },
+
+    {
+        'name': 'gradient max',
+        'abbrv': 'gradmax',
+        'function': (lambda img, segmented:
+                     grad_max(img)),
+    },
+
+    {
+        'name': 'gradient mean',
+        'abbrv': 'gradmean',
+        'function': (lambda img, segmented:
+                     grad_mean(img)),
+    },
+
+    {
+        'name': 'gradient median',
+        'abbrv': 'gradmedian',
+        'function': (lambda img, segmented:
+                     grad_median(img)),
+    },
+
+    {
+        'name': 'laplacian max',
+        'abbrv': 'lapmax',
+        'function': (lambda img, segmented:
+                     lap_max(img)),
     },
 
 ]

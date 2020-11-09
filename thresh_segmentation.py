@@ -21,5 +21,5 @@ def segmentate(img):
 
     blur = cv.medianBlur(thresh, 11)
     # print(blur.min(), blur.max())  # 0 2
-    thresh = np.where(blur >= 2, 1, 0)
+    thresh = np.where(blur >= 2, 0, 1)
     return thresh

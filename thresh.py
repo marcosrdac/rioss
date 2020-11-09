@@ -31,7 +31,7 @@ for f in ls:
     blur = cv.medianBlur(thresh, 11)
     print(blur.min(), blur.max())
     # thresh = blur >= 2
-    thresh = np.where(blur >= 2, 1, 0)
+    thresh = np.where(blur >= 2, 0, 1)
 
     # thresh = cv.adaptiveThreshold(thresh, 2,
                                    # cv.ADAPTIVE_THRESH_MEAN_C,
