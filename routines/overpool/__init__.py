@@ -1,8 +1,8 @@
 import numpy as np
 
 
-def overlapping_pool(img, whs=2, pool_func=np.std,
-                     give_window=False, pool_func_kw={}):
+def overlapping_pool(img, whs=2, pool_func=np.std, extra=True,
+                     give_window=False, pool_func_kw={}, last_dim=None):
     '''
     Function made to create pooling layers with any pooling function, which is
     run at windows with side `ws` and half-side `whs`. The windows overlap at
@@ -22,12 +22,15 @@ def overlapping_pool(img, whs=2, pool_func=np.std,
     pool_rows = rows//ws + (rows-whs)//ws
     pool_cols = cols//ws + (cols-whs)//ws
     extra_col, extra_row = 0, 0
-    if rows % whs != 0:
-        extra_row = 1
-    if cols % whs != 0:
-        extra_col = 1
-    # pooling_layer = np.empty((pool_rows+extra_row, pool_cols+extra_col))
-    pooling_layer = np.zeros((pool_rows+extra_row, pool_cols+extra_col))
+    if extra:
+        if rows % whs != 0:
+            extra_row = 1
+        if cols % whs != 0:
+            extra_col = 1
+    outshape = [pool_rows+extra_row, pool_cols+extra_col]
+    if last_dim is not None:
+        outshape.append(last_dim)
+    pooling_layer = np.empty(outshape)
     # pooling function calcylated at every window
     for xpi in range(pool_cols):
         xi = whs*xpi
@@ -78,12 +81,43 @@ if __name__ == '__main__':
 
     shape = (2204, 3555)
     m = np.arange(np.multiply(*shape)).reshape(shape)
+
+    # one dimensional output for function np.mean
     _m = overlapping_pool(m, 512, np.mean)
 
+    plt.figure(figsize=(8,4))
+    plt.suptitle('One dimensional output')
     plt.subplot(121)
+    plt.title('Original image')
     plt.imshow(m)
     plt.colorbar()
     plt.subplot(122)
+    plt.title('Filtered image')
     plt.imshow(_m)
     plt.colorbar()
+    plt.tight_layout()
+    plt.show()
+
+
+    # bidimensions output for function test_func
+    def test_func(img):
+        '''
+        Bidimensinal output function.
+        '''
+        m = np.mean(img)
+        return m, -m
+
+    _m = overlapping_pool(m, 512, test_func, last_dim=2)
+
+    plt.figure(figsize=(8,4))
+    plt.suptitle('Bidimensional output')
+    plt.subplot(121)
+    plt.title('First layer of output (mean)')
+    plt.imshow(_m[...,0])
+    plt.colorbar()
+    plt.subplot(122)
+    plt.title('Second layer of output (-mean)')
+    plt.imshow(_m[...,1])
+    plt.colorbar()
+    plt.tight_layout()
     plt.show()

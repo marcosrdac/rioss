@@ -2,9 +2,10 @@ import matplotlib.pyplot as plt
 from routines.functions import discarray, unsigned_span
 import cv2 as cv
 import numpy as np
-from os.path import join
+from os.path import join, basename
 from os import listdir, environ
 environ["CUDA_VISIBLE_DEVICES"] = "-1"
+from segmentation import segmentate
 # from segmentation import segmentate
 
 folder = "/mnt/hdd/home/tmp/los/data/classification_blocks"
@@ -14,40 +15,36 @@ for f in ls:
     # f = ls[5]
 
     img = discarray(f)
-    # thresh = segmentate()
     _img = unsigned_span(img)
 
     blur = cv.GaussianBlur(_img, (7, 7), 0)
     thresh = cv.threshold(blur, False, True,
                           cv.THRESH_BINARY+cv.THRESH_OTSU)[1]
 
-    # segmented = segmentate(img)
-
     thresh += cv.adaptiveThreshold(blur, 1,
                                    cv.ADAPTIVE_THRESH_MEAN_C,
                                    cv.THRESH_BINARY,
-                                   601, 2)
+                                   401, 4)
 
-    blur = cv.medianBlur(thresh, 11)
+    blur = cv.medianBlur(thresh, 13)
     print(blur.min(), blur.max())
     # thresh = blur >= 2
-    thresh = np.where(blur >= 2, 0, 1)
+    _thresh = 1-np.where(blur >= 2, 0, 1)
 
-    # thresh = cv.adaptiveThreshold(thresh, 2,
-                                   # cv.ADAPTIVE_THRESH_MEAN_C,
-                                   # cv.THRESH_BINARY,
-                                   # 51, 2)
+    segmented = segmentate(img)
 
-
-    plt.subplot(121)
-    # plt.subplot(221)
-    plt.imshow(img)
-    plt.colorbar()
-    plt.subplot(122)
-    # plt.subplot(222)
+    plt.figure(figsize=(7,7))
+    plt.subplot(221)
+    plt.title(r'$\sigma_0$')
+    plt.imshow(img, vmin=-50, vmax=20, cmap='Greys_r')
+    plt.subplot(222)
+    plt.title(r'adaptativos somados')
     plt.imshow(thresh)
-    plt.colorbar()
-    # plt.subplot(224)
-    # plt.imshow(segmented)
-    # plt.colorbar()
-    plt.show()
+    plt.subplot(224)
+    plt.title(r'adaptativo resultante')
+    plt.imshow(_thresh)
+    plt.subplot(223)
+    plt.title(r'rede neural')
+    plt.imshow(segmented)
+    plt.savefig(f"/mnt/hdd/home/tmp/los/data/maps/20201110_threshblockpics/{basename(f)}.png")
+    # plt.show()

@@ -12,6 +12,7 @@ from routines.overpool import overlapping_pool
 # from classification import classify
 # from adth_classification import classify
 from new_adth_classification import classify
+from parameters import CLASSIFICATION_CATEGORIES
 
 
 bands_used = {
@@ -43,15 +44,23 @@ for f in files:
             break
         except:
             continue
-    plt.subplot(121)
-    # plt.suptitle(basename(f))
-    plt.imshow(img, aspect="equal")
-    plt.subplot(122)
-    # plt.suptitle(basename(f))
-    pool = overlapping_pool(img, 512//2, classify)
+
+    pool = overlapping_pool(img, 512//2,
+                            lambda img: classify(img, proba=True),
+                            last_dim=len(CLASSIFICATION_CATEGORIES),
+                            extra=False)
     _pool = discarray(f'{basename(f)}.bin', mode="w+",
                       dtype=int, shape=pool.shape)
     _pool[...] = pool[...]
-    sns.heatmap(pool, annot=True, square=True)
+
+    # plt.suptitle(basename(f))
+    plt.subplot(121)
+    plt.imshow(img, aspect="equal", vmin=-55, vmax=20)
+    plt.colorbar()
+    plt.subplot(122)
+    plt.imshow(pool[..., 0], aspect="equal",
+               vmin=0, vmax=1, cmap="jet")
+               # vmin=0, vmax=1, interpolation='lanczos')
+    plt.colorbar()
     plt.savefig(f'{basename(f)}.png')
     plt.show()

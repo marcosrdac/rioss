@@ -167,7 +167,7 @@ def grad_median(img, sigma=3):
 
 
 def lap_max(img, sigma=7):
-    return np.median(lap(img, sigma))
+    return np.max(lap(img, sigma))
 
 
 def get_glcm(img, distances=None, angles=None):
