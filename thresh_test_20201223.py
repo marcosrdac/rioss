@@ -17,34 +17,34 @@ for f in ls:
     _img = unsigned_span(img)
 
     blur = cv.GaussianBlur(_img, (7, 7), 0)
-    thresh = cv.threshold(blur, False, True,
-                          cv.THRESH_BINARY+cv.THRESH_OTSU)[1]
+    otsu = cv.threshold(blur, False, True,
+                        cv.THRESH_BINARY+cv.THRESH_OTSU)[1]
 
-    thresh += cv.adaptiveThreshold(blur, 1,
-                                   cv.ADAPTIVE_THRESH_MEAN_C,
-                                   cv.THRESH_BINARY,
-                                   401, 4)
+    mean = cv.adaptiveThreshold(blur, 1,
+                                cv.ADAPTIVE_THRESH_MEAN_C,
+                                cv.THRESH_BINARY,
+                                451, 4)
 
-    blur = cv.medianBlur(thresh, 13)
-    print(blur.min(), blur.max())
-    # thresh = blur >= 2
-    _thresh = 1-np.where(blur >= 2.0, 0, 1)
+    total = otsu + mean
 
-    # segmented = segmentate(img)
+    total_blur = cv.medianBlur(total, 13)
+
+    final = np.where(total_blur >= 2, 1, 0)
 
     plt.figure(figsize=(7,7))
     plt.subplot(221)
-    plt.title(r'$\sigma_0$')
-    plt.imshow(img, vmin=-50, vmax=20, cmap='Greys_r')
+    # plt.title(r'$\sigma_0$')
+    # plt.imshow(img, vmin=-50, vmax=20, cmap='Greys_r')
+    plt.title(r'mean')
+    plt.imshow(mean)
     plt.subplot(222)
     plt.title(r'adaptativos somados')
-    plt.imshow(thresh)
+    plt.imshow(total)
     plt.subplot(224)
     plt.title(r'adaptativo resultante')
-    plt.imshow(_thresh)
+    plt.imshow(final)
     plt.subplot(223)
-    plt.title(r'blur')
-    plt.imshow(blur)
-    # plt.imshow(segmented)
+    plt.title(r'otsu')
+    plt.imshow(otsu)
     # plt.savefig(f"/mnt/hdd/home/tmp/los/data/maps/20201110_threshblockpics/{basename(f)}.png")
     plt.show()

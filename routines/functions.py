@@ -10,6 +10,7 @@ import matplotlib.pyplot as plt
 from matplotlib.pyplot import imshow
 from scipy.fftpack import fftn
 from scipy.ndimage.filters import laplace, gaussian_filter
+from scipy.ndimage import rotate
 from skimage.feature import greycomatrix, greycoprops
 from scipy.signal import convolve2d
 from scipy.spatial import KDTree
@@ -31,6 +32,16 @@ def discarray(filename, mode='r', dtype=float, shape=None, order='C'):
         arr = np.memmap(io, mode=mode, dtype=dtype, shape=shape,
                         offset=offset, order=order)
     return(arr)
+
+
+def shapely_rotate(img, angle=0, mode='reflect', cut=True):
+    rotated = rotate(img, angle, mode=mode)
+    oh, ow = img.shape[:2]
+    rh, rw = rotated.shape[:2]
+    if cut:
+        rotated = rotated[rh//2-oh//2:rh//2+oh//2,
+                          rw//2-ow//2:rw//2+ow//2]
+    return rotated
 
 
 def get_block_corners(yc, xc, ws):
