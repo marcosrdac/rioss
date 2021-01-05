@@ -100,6 +100,21 @@ def perimeter(arr):
 def area(arr):
     return np.sum(arr)
 
+# https://en.wikipedia.org/wiki/Spread_of_a_matrix
+def spread(mask):
+    idx = np.stack(np.where(mask), axis=1)
+    cov = np.cov(idx[:,0], idx[:,1])
+    l1, l2 = np.sort(np.linalg.eigvals(cov))[::-1]
+    return np.abs((l1-l2)/l1)
+
+# DEL FRATE, 2001
+# https://math.stackexchange.com/questions/131675/ratio-of-largest-eigenvalue-to-sum-of-eigenvalues-where-to-read-about-it
+def spreading(mask):
+    idx = np.stack(np.where(mask), axis=1)
+    cov = np.cov(idx[:,0], idx[:,1])
+    l1, l2 = np.sort(np.linalg.eigvals(cov))[::-1]
+    return l2/(l1+l2)
+
 
 def lacunarity(img, ratios=None):
     def box_lacunarity(box):
