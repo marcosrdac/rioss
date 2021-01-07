@@ -11,7 +11,8 @@ from routines.functions import discarray, get_mwa, get_mrwa, mwsd
 from routines.overpool import overlapping_pool
 # from classification import classify
 # from adth_classification import classify
-from new_adth_classification import classify
+# from new_adth_classification import classify
+from rf_2_classification import classify
 
 
 bands_used = {
@@ -43,15 +44,18 @@ for f in files:
             break
         except:
             continue
-    plt.subplot(121)
-    # plt.suptitle(basename(f))
-    plt.imshow(img, aspect="equal")
-    plt.subplot(122)
-    # plt.suptitle(basename(f))
+    fig, axes = plt.subplots(1,2)
+    # fig.suptitle(basename(f))
+    ax = axes.flat[0]
+    im = ax.imshow(img, aspect="equal")
+    plt.colorbar(im, ax=ax)
+    # pool = overlapping_pool(img, 512//2, lambda x: 1)
     pool = overlapping_pool(img, 512//2, classify)
-    _pool = discarray(f'{basename(f)}.bin', mode="w+",
+    _pool = discarray(f'out/{basename(f)}.bin', mode="w+",
                       dtype=int, shape=pool.shape)
     _pool[...] = pool[...]
-    sns.heatmap(pool, annot=True, square=True)
-    plt.savefig(f'{basename(f)}.png')
-    plt.show()
+    ax = axes.flat[1]
+    # sns.heatmap(pool, annot=True, square=True)
+    sns.heatmap(pool, annot=False, square=True, ax=ax, vmin=0, vmax=1)
+    plt.savefig(f'out/{basename(f)}.png')
+    # plt.show()

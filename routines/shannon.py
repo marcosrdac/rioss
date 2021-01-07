@@ -26,8 +26,10 @@ def entropy(img, base=None):
     if isinstance(img, np.ma.MaskedArray):
         img = img.compressed()
     entropy = sequence_entropy(img.flat, base=base)
-    return(entropy)
+    return entropy
 
+def norm_entropy(img):
+    return entropy(img.ravel())/np.log(img.size)
 
 def files_entropy(filepaths, base=None):
     entropies = []

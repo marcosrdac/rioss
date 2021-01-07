@@ -92,13 +92,20 @@ def apply_over_masked(img, mask, function=np.mean):
 
 
 def perimeter(arr):
-    Dy, Dx = np.gradient(arr)
-    intensity2 = np.square(Dy) + np.square(Dx)
+    Dy, Dx = np.gradient(arr.astype(int))
+    intensity2 = np.sqrt(np.square(Dy) + np.square(Dx))
     return np.sum(~np.isclose(intensity2, 0.))
 
 
 def area(arr):
     return np.sum(arr)
+
+def complexity(mask):
+    try:
+        complexity = perimeter(mask)/np.sqrt(4*np.pi*area(mask))
+    except ZeroDivisionError:
+        complexity = 0.
+    return complexity
 
 # https://en.wikipedia.org/wiki/Spread_of_a_matrix
 def spread(mask):
@@ -114,7 +121,6 @@ def spreading(mask):
     cov = np.cov(idx[:,0], idx[:,1])
     l1, l2 = np.sort(np.linalg.eigvals(cov))[::-1]
     return l2/(l1+l2)
-
 
 def lacunarity(img, ratios=None):
     def box_lacunarity(box):
@@ -207,7 +213,6 @@ def get_glcm(img, distances=None, angles=None):
     glcm = greycomatrix(uimg, distances=distances, angles=angles, normed=True)
     return(glcm)
 
-
 def get_correlation(glcm):
     return greycoprops(glcm, "correlation")[0, :].mean()
 
@@ -222,6 +227,9 @@ def get_homogeneity(glcm):
 
 def get_energy(glcm):
     return greycoprops(glcm, "energy")[0, :].mean()
+
+def get_contrast(glcm):
+    return greycoprops(glcm, "contrast")[0, :].mean()
 
 
 def listifext(folder, exts=None, fullpath=False):

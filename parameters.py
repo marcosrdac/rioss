@@ -52,24 +52,24 @@ CLASSIFICATION_CATEGORIES = [
         'color': 'red',
     },
     {
+        'name': 'phyto',
+        'color': 'forestgreen',
+    },
+    {
+        'name': 'rain',
+        'color': 'lightskyblue',
+    },
+    {
+        'name': 'wind',
+        'color': 'grey',
+    },
+    {
         'name': 'sea',
         'color': 'blue',
     },
     {
         'name': 'terrain',
-        'color': 'dimgray',
-    },
-    {
-        'name': 'phyto',
-        'color': 'limegreen',
-    },
-    {
-        'name': 'rain',
-        'color': 'cornflowerblue',
-    },
-    {
-        'name': 'wind',
-        'color': 'indigo',
+        'color': 'brown',
     },
     # {
     # 'name': 'lookalike',
@@ -97,61 +97,80 @@ CLASSIFICATION_FEATURES = [
         'function': (lambda img, segmented:
                      semivariogram.fractal_dimension(img, 5/100)),
     },
+
     {
-        'name': 'shannon entropy',
+        'name': 'normalized shannon entropy',
         'abbrv': 'entropy',
         'function': (lambda img, segmented:
-                     shannon.entropy(img)),
+                     shannon.norm_entropy(img)),
+    },
+    {
+        'name': 'segmentation mask normalized shannon entropy',
+        'abbrv': 'segentropy',
+        'function': (lambda img, segmented:
+                     shannon.norm_entropy(segmented)),
     },
 
     {
         'name': 'glcm correlation',
-        'abbrv': 'glcmcorr',
+        'abbrv': 'corr',
         'function': (lambda img, segmented:
                      get_correlation(get_glcm(img))),
     },
     {
         'name': 'glcm dissimilarity',
-        'abbrv': 'glcmdiss',
+        'abbrv': 'diss',
         'function': (lambda img, segmented:
                      get_dissimilarity(get_glcm(img))),
     },
     {
         'name': 'glcm homogeneity',
-        'abbrv': 'glcmhomo',
+        'abbrv': 'homo',
         'function': (lambda img, segmented:
                      get_homogeneity(get_glcm(img))),
     },
     {
         'name': 'glcm energy',
-        'abbrv': 'glcmener',
+        'abbrv': 'ener',
         'function': (lambda img, segmented:
                      get_energy(get_glcm(img))),
+    },
+    {
+        'name': 'glcm contrast',
+        'abbrv': 'cont',
+        'function': (lambda img, segmented:
+                     get_contrast(get_glcm(img))),
     },
 
     {
         'name': 'segmented glcm correlation',
-        'abbrv': 'segglcmcorr',
+        'abbrv': 'segcorr',
         'function': (lambda img, segmented:
                      get_correlation(get_glcm(segmented))),
     },
     {
         'name': 'segmented glcm dissimilarity',
-        'abbrv': 'segglcmdiss',
+        'abbrv': 'segdiss',
         'function': (lambda img, segmented:
                      get_dissimilarity(get_glcm(segmented))),
     },
     {
         'name': 'segmented glcm homogeneity',
-        'abbrv': 'segglcmhomo',
+        'abbrv': 'seghomo',
         'function': (lambda img, segmented:
                      get_homogeneity(get_glcm(segmented))),
     },
     {
         'name': 'segmented glcm energy',
-        'abbrv': 'segglcmener',
+        'abbrv': 'segener',
         'function': (lambda img, segmented:
                      get_energy(get_glcm(segmented))),
+    },
+    {
+        'name': 'segmented glcm contrast',
+        'abbrv': 'segcont',
+        'function': (lambda img, segmented:
+                     get_contrast(get_glcm(segmented))),
     },
 
     {
@@ -279,11 +298,26 @@ CLASSIFICATION_FEATURES = [
                      grad_median(img)),
     },
 
+    # {
+        # 'name': 'laplacian max',
+        # 'abbrv': 'lapmax',
+        # 'function': (lambda img, segmented:
+                     # lap_max(img)),
+    # },
+
     {
-        'name': 'laplacian max',
-        'abbrv': 'lapmax',
+        'name': 'complexity',
+        'abbrv': 'complex',
         'function': (lambda img, segmented:
-                     lap_max(img)),
+                     complexity(segmented)),
     },
 
+    {
+        'name': 'spreading',
+        'abbrv': 'spreading',
+        'function': (lambda img, segmented:
+                     spreading(segmented)),
+    },
 ]
+
+print(len(CLASSIFICATION_FEATURES))

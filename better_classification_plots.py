@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 import matplotlib as mpl
 
 
+
 CLASSIFICATION_CATEGORIES = [
     {
         'name': 'oil',
@@ -16,19 +17,19 @@ CLASSIFICATION_CATEGORIES = [
     },
     {
         'name': 'terrain',
-        'color': 'dimgray',
+        'color': 'brown',
     },
     {
         'name': 'phyto',
-        'color': 'limegreen',
+        'color': 'forestgreen',
     },
     {
         'name': 'rain',
-        'color': 'cornflowerblue',
+        'color': 'lightskyblue',
     },
     {
         'name': 'wind',
-        'color': 'indigo',
+        'color': 'grey',
     },
     # {
     # 'name': 'lookalike',
