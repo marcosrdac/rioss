@@ -2,7 +2,6 @@
 
 **Radar Image Oil Spill Seeker (RIOSS)**, is a machine learning classification tool to help identifying oil spills, as a product of my undergraduate research grant at BR-Oil project by Instituto Nacional de Ciência e Tecnologia da Geofísica do Petróleo (INCT-GP).
 
-
 ## Contributors
 
 - **Data scientist**: Marcos Reinan de Assis Conceição (undergraduate researcher)

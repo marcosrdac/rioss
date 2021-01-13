@@ -1,108 +1,69 @@
-#!/usr/bin/env python3
-
-import re
-import numpy as np
-import netCDF4 as nc
-from keras.models import load_model  # needs to be imported here
-from pickle import loads
 import matplotlib.pyplot as plt
-from os import listdir, makedirs
-from os.path import expanduser, isdir, splitext, join, basename
-from routines.functions import discarray, get_mwa, get_mrwa, mwsd
-
-if __name__ == '__main__':
-    ROOT = '.'
-else:
-    ROOT = '.'
-
-MODELS = join(ROOT, 'models')
-MODEL_NAME = 'segmentation_val_mwa15_mwsd15_mrwa1625_ARCH_5_1_5'
-SEGMENTATION_MODEL = join(MODELS, f'{MODEL_NAME}.h5')
-SEGMENTATION_MODEL_SCALER = join(MODELS, f'{MODEL_NAME}_scaler')
+from routines.functions import discarray, unsigned_span
+import cv2 as cv
+import numpy as np
+from os.path import join, basename
+from os import listdir, environ
 
 
-segmentation_model = load_model(SEGMENTATION_MODEL)
-with open(SEGMENTATION_MODEL_SCALER, 'rb') as f:
-    segmentation_model_scaler = loads(f.read())
+def segmentate(img, ret_aux=False):
+    img8 = unsigned_span(img)
+    blur = cv.GaussianBlur(img8, 7), 0)
 
+    otsu = cv.threshold(blur, False, True,
+                        cv.THRESH_BINARY+cv.THRESH_OTSU)[1]
+    mean = cv.adaptiveThreshold(blur, 1,
+                                cv.ADAPTIVE_THRESH_MEAN_C,
+                                cv.THRESH_BINARY,
+                                451, 4)
+    total = otsu + mean
+    total_blur = cv.medianBlur(total, 13)
+    segmented = np.where(total_blur >= 2, 1, 0)
 
-FEATURES = [
-    {
-        'name': 'val',
-        'function': lambda img: img,
-    },
-    {
-        'name': 'mwa15x15',
-        'function': lambda img: get_mwa(7)(img),
-    },
-    {
-        'name': 'mwsd15x15',
-        'function': lambda img: mwsd(img, 7),
-    },
-    {
-        'name': 'mrwa1625',
-        'function': lambda img: get_mrwa(25, 16)(img),
-    },
-]
-
-
-def segmentate(img):
-    def calculate_features(img):
-        n_functions = len(FEATURES)
-        feats = np.empty((img.size, n_functions))
-        for i, feature in enumerate(FEATURES):
-            print(f"    Calculating: {feature['name']}")
-            feats[:, i] = feature['function'](img).flatten()
-        return(feats)
-
-    # Add verbose option
-
-    print(f"    Calculating block features.")
-    X = calculate_features(img)
-    print(f"    Dealing with NaNs.")
-    X = np.where(np.isnan(X), 0, X)  # check if it's okay
-    print(f"    Scaling data.")
-    X = segmentation_model_scaler.transform(X)
-    print(f"    Perfforming segmentation of block.")
-    y = np.argmax(segmentation_model.predict(X), axis=1)
-    # y = 1 - y  # CORRECTING OPOSITE MODELS (fg=0 --> fg=1)
-    return y.reshape(img.shape)
+    if ret_aux:
+        return blur, otsu, mean, total, total_blur, segmented
+    else:
+        return segmented
 
 
 if __name__ == '__main__':
-    # pass
-    from random import shuffle
-    folder = '/mnt/hdd/home/tmp/los/data/classification_blocks'
-    files = [join(folder, f) for f in listdir(folder)]
-    # shuffle(files)
-    for f in files:
+    folder = "/mnt/hdd/home/tmp/los/data/classification_blocks"
+    ls = [join(folder, f) for f in listdir(folder)]
+
+    cmap='Greys_r'
+    cmap='gray'
+
+    for f in ls:
         img = discarray(f)
-        segmented = segmentate(img)
+        blur, otsu, mean, total, total_blur, seg = segmentate(img, True)
+        
+        fig, axes = plt.subplots(3,2, figsize=(7,7))
+        ax = axes[0,0]
+        ax.set_title(r'$\sigma_0$')
+        ax.imshow(img, vmin=-50, vmax=20, cmap=cmap)
+        ax = axes[1,0]
+        ax.set_title(r'Local thresholding')
+        ax.imshow(mean, cmap=cmap)
+        ax = axes[2,0]
+        ax.set_title(r'Otsu thresholding')
+        ax.imshow(otsu, cmap=cmap)
+        ax = axes[0,1]
+        ax.set_title(r'Summed outputs')
+        ax.imshow(total, cmap=cmap)
+        ax = axes[1,1]
+        ax.set_title(r'Median filtered mask')
+        ax.imshow(total_blur, cmap=cmap)
+        ax = axes[2,1]
+        ax.set_title(r'Resulting mask')
+        ax.imshow(seg, cmap=cmap)
+        
+        for ax in axes.flat:
+            ax.set_yticks([])
+            ax.set_xticks([])
 
-        plt.subplot(121)
-        plt.imshow(img)
-        plt.subplot(122)
-        plt.imshow(segmented)
+        fig.tight_layout()
 
-        plt.show()
-
-
-    #print('\n'*80)
-    #print('starting')
-    #ncd = nc.Dataset(
-    #    '/home/marcosrdac/tmp/los/sar/' +
-    #    'subset_0_of_S1A_IW_SLC__1SDV_20181009T171427_20181009T171454_024062_02A131_CCBB_Cal_Orb_Deb_ML_dB.nc')
-    ## 'subset_0_of_S1B_IW_SLC__1SDV_20190319T181151_20190319T181219_015427_01CE45_2311.nc')
-    #ncvar = ncd.variables['Sigma0_VV_db']
-    ## var = np.array(ncvar)[:2000, 2000:3000]
-    ## var = np.array(ncvar)
-    #var = np.array(ncvar)[:30, :30]
-    #
-    ## var = np.load('/mnt/hdd/tmp/sar/test.npy')
-    ##
-    #fig, axes = plt.subplots(1, 2, dpi=300, figsize=(10, 4))
-    #axes[0].imshow(var)
-    #axes[1].imshow(segmentate(var))
-    #fig.tight_layout()
-    #fig.savefig('segmodel_5_2_1_5_10.png')
-    #plt.show()
+        saving_folder = f"/mnt/hdd/home/tmp/los/data/maps/20210113_segmentation"
+        plt.savefig(join(saving_folder, f"{basename(f)}.png"))
+        # plt.show()
+        plt.close(fig)

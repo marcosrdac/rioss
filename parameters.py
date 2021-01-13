@@ -77,6 +77,20 @@ CLASSIFICATION_CATEGORIES = [
     # },
 ]
 
+
+CLASSIFICATION_CATEGORIES_2 = [
+    # just used when plotting
+    {
+        'name': 'oil',
+        'color': 'red',
+    },
+    {
+        'name': 'background',
+        'color': 'blue',
+    },
+]
+
+
 # please don't use spaces in the abbreviation (abbrv)
 CLASSIFICATION_FEATURES = [
     {
