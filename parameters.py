@@ -52,7 +52,7 @@ CLASSIFICATION_CATEGORIES = [
         'color': 'red',
     },
     {
-        'name': 'phyto',
+        'name': 'biofilm',
         'color': 'forestgreen',
     },
     {
@@ -100,7 +100,7 @@ CLASSIFICATION_FEATURES = [
                      boxcounting.fractal_dimension(segmented)),
     },
     {
-        'name': 'power spectrum density fractal dimension',
+        'name': 'power spectral density fractal dimension',
         'abbrv': 'psdfd',
         'function': (lambda img, segmented:
                      psd.fractal_dimension(img)),

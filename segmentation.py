@@ -8,13 +8,14 @@ from os import listdir, environ
 
 def segmentate(img, ret_aux=False):
     img8 = unsigned_span(img)
-    blur = cv.GaussianBlur(img8, 7), 0)
+    blur = cv.GaussianBlur(img8, (7, 7), 0)
 
     otsu = cv.threshold(blur, False, True,
                         cv.THRESH_BINARY+cv.THRESH_OTSU)[1]
     mean = cv.adaptiveThreshold(blur, 1,
                                 cv.ADAPTIVE_THRESH_MEAN_C,
                                 cv.THRESH_BINARY,
+                                # 601, 4)
                                 451, 4)
     total = otsu + mean
     total_blur = cv.medianBlur(total, 13)
@@ -65,5 +66,5 @@ if __name__ == '__main__':
 
         saving_folder = f"/mnt/hdd/home/tmp/los/data/maps/20210113_segmentation"
         plt.savefig(join(saving_folder, f"{basename(f)}.png"))
-        # plt.show()
+        plt.show()
         plt.close(fig)
