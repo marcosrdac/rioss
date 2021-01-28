@@ -7,8 +7,8 @@ import numpy as np
 from scipy.stats import skew, kurtosis
 from pickle import loads
 from routines.functions import discarray
-from routines.functions import lacunarity, perimeter, area, get_glcm
-from thresh_segmentation import segmentate
+from routines.functions import grad, lacunarity, perimeter, area, get_glcm
+from segmentation import segmentate
 from block_functions import BLOCK_FUNCTIONS
 from parameters import CLASSIFICATION_CATEGORIES
 
@@ -24,7 +24,7 @@ with open(VARS_MODEL, 'rb') as f:
 FEATURES = [{'name': name, 'function': BLOCK_FUNCTIONS[name]}
              for name in FEATURE_NAMES]
 
-print(FEATURES)
+# print(FEATURES)
 
 def classify(img, proba=False):
     def calculate_features(img):
@@ -33,10 +33,11 @@ def classify(img, proba=False):
         segmented = segmentate(img)
         glcm = get_glcm(img)
         segglcm = get_glcm(segmented)
+        _grad = grad(img)
 
         for i, feature in enumerate(FEATURES):
             print(f"    Calculating: {feature['name']}")
-            feats[i] = feature['function'](img, segmented, glcm, segglcm)
+            feats[i] = feature['function'](img, segmented, glcm, segglcm, _grad)
             # print(feats[i])
         return(feats)
 
@@ -45,8 +46,8 @@ def classify(img, proba=False):
     print(f"    Calculating block features.")
     x = calculate_features(img)[None, :]
     print(f"    Dealing with NaNs.")
-    x = np.where(np.isnan(x), 0, x)  # check if it's okay
-    x = np.where(~np.isfinite(x), 0, x)  # check if it's okay
+    x = np.where(np.isnan(x), 0, x)      # make sure it's okay
+    x = np.where(~np.isfinite(x), 0, x)  # make sure it's okay
     # print(f"    Scaling data.")
     # X = segmentation_model_scaler.transform(X)
     print(f"    Perfforming segmentation of block.")

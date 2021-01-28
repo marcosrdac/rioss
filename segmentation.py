@@ -1,22 +1,23 @@
-import matplotlib.pyplot as plt
+from datetime import datetime
+from os import environ, listdir, mkdir
+from os.path import expanduser, basename,  exists, isfile, isdir, relpath, dirname, join, splitext
 from routines.functions import discarray, unsigned_span
-import cv2 as cv
 import numpy as np
-from os.path import join, basename
-from os import listdir, environ
+import netCDF4 as nc
+import cv2 as cv
+import matplotlib.pyplot as plt
 
 
 def segmentate(img, ret_aux=False):
     img8 = unsigned_span(img)
     blur = cv.GaussianBlur(img8, (7, 7), 0)
 
-    otsu = cv.threshold(blur, False, True,
+    otsu = cv.threshold(blur, 0, 1,
                         cv.THRESH_BINARY+cv.THRESH_OTSU)[1]
     mean = cv.adaptiveThreshold(blur, 1,
                                 cv.ADAPTIVE_THRESH_MEAN_C,
                                 cv.THRESH_BINARY,
-                                # 601, 4)
-                                451, 4)
+                                601, 4)
     total = otsu + mean
     total_blur = cv.medianBlur(total, 13)
     segmented = np.where(total_blur >= 2, 1, 0)
@@ -28,14 +29,47 @@ def segmentate(img, ret_aux=False):
 
 
 if __name__ == '__main__':
-    folder = "/mnt/hdd/home/tmp/los/data/classification_blocks"
-    ls = [join(folder, f) for f in listdir(folder)]
+    ncfiles = True
+
+    band_choices = {
+        'Sigma0_IW1_VV_db',
+        'Sigma0_IW2_VV_db',
+        'Intensity_IW2_VV_db',
+        'Sigma0_VV_db',
+        'Sigma0_db',
+    }
+
+    IN_DA = "/mnt/hdd/home/tmp/los/data/classification_blocks"
+    IN_NC = "/mnt/hdd/home/tmp/los/data/original"
+    TODAY = datetime.today().strftime('%Y%m%d')
+    OUT = f'/mnt/hdd/home/tmp/los/data/maps/{TODAY}_seg'
+    if not exists(OUT):
+        mkdir(OUT)
+
+    if ncfiles:
+        ls = [join(IN_NC, f) for f in listdir(IN_NC) if f.endswith('.nc')]
+    else:
+        ls = [join(IN_DA, f) for f in listdir(IN_DA)]
 
     cmap='Greys_r'
     cmap='gray'
 
     for f in ls:
-        img = discarray(f)
+        name = splitext(basename(f))[0]
+
+        stay = True
+        if ncfiles:
+            ncd = nc.Dataset(f)
+            for band in band_choices:
+                if band in ncd.variables:
+                    img = np.asarray(ncd.variables[band])
+                    # ncd.close()
+                    break
+            stay = False
+        else:
+            img = discarray(f)
+        if not stay: continue
+
         blur, otsu, mean, total, total_blur, seg = segmentate(img, True)
         
         fig, axes = plt.subplots(3,2, figsize=(7,7))
@@ -64,7 +98,6 @@ if __name__ == '__main__':
 
         fig.tight_layout()
 
-        saving_folder = f"/mnt/hdd/home/tmp/los/data/maps/20210113_segmentation"
-        plt.savefig(join(saving_folder, f"{basename(f)}.png"))
+        plt.savefig(join(OUT, name + '.png'))
         plt.show()
         plt.close(fig)

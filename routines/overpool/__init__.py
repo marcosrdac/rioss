@@ -2,7 +2,7 @@ import numpy as np
 
 
 def overlapping_pool(img, whs=2, pool_func=np.std, extra=True,
-                     give_window=False, pool_func_kw={}, last_dim=None):
+                     give_window=False, pool_func_kw={}, last_dim=None, dtype=None):
     '''
     Function made to create pooling layers with any pooling function, which is
     run at windows with side `ws` and half-side `whs`. The windows overlap at
@@ -30,7 +30,7 @@ def overlapping_pool(img, whs=2, pool_func=np.std, extra=True,
     outshape = [pool_rows+extra_row, pool_cols+extra_col]
     if last_dim is not None:
         outshape.append(last_dim)
-    pooling_layer = np.empty(outshape)
+    pooling_layer = np.empty(outshape, dtype=dtype)
     # pooling function calcylated at every window
     for xpi in range(pool_cols):
         xi = whs*xpi

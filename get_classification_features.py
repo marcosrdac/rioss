@@ -10,9 +10,10 @@ import netCDF4 as nc
 from PIL import Image
 # DEFINED
 from routines.functions import discarray, listifext, first_channel, \
-    sample_min_dist, get_block_corners, adjust_block_center_get_corners
+    sample_min_dist, get_block_corners, adjust_block_center_get_corners, \
+    shapely_rotate
 # from segmentation import segmentate
-from thresh_segmentation import segmentate
+from segmentation import segmentate
 from parameters import CLASSIFICATION_INPUT_DATA, \
     CLASSIFICATION_INPUT_MASKS, \
     CLASSIFICATION_BLOCKS_OUTPUT, \
@@ -20,8 +21,8 @@ from parameters import CLASSIFICATION_INPUT_DATA, \
     CLASSIFICATION_CATEGORIES, \
     CLASSIFICATION_FEATURES
 # DEBUGGING
-#import matplotlib.pyplot as plt
-#import matplotlib.patches as patches
+import matplotlib.pyplot as plt
+import matplotlib.patches as patches
 
 
 # PRECONFIGURATION
@@ -29,6 +30,8 @@ from parameters import CLASSIFICATION_INPUT_DATA, \
 # block side, half-side
 WS = 512
 HWS = WS//2
+
+rotation_angles = [0,15,30,60,75]
 
 
 input_data_fps = listifext(CLASSIFICATION_INPUT_DATA, 'nc', fullpath=True)
@@ -97,80 +100,86 @@ for ncf in input_data_fps:
  
     h, w = img.shape
  
- ##    # --- debugging blocks (looking at their positions) --- #
- ##    fig, ax = plt.subplots()
- ##    ax.imshow(img)
- ##    for c in CLASSIFICATION_CATEGORIES:
- ##        if c['has_coords']:
- ##            for p, (yc, xc) in enumerate(zip(c['coords'][:, 0],
- ##                                             c['coords'][:, 1])):
- ##                modified, (yc, xc), (yi, xi), (yf, xf) = \
- ##                    adjust_block_center_get_corners(yc, xc, WS, h, w)
- ##                if modified:
- ##                    c['coords'][p, :] = (yc, xc)
- ##                rect = patches.Rectangle((xi, yi), WS, WS,
- ##                                         linewidth=1, edgecolor=c['color'],
- ##                                         facecolor='none')
- ##                ax.add_patch(rect)
- ##                ax.scatter(xc, yc, color=c['color'])
- ##    plt.show()
-  
-    # --- saving block labels (comment if not needed) --- #
-    labels_filename = join(CLASSIFICATION_FEATURES_OUTPUT,
-                           f'{base}_label.bin')
-
-    categories = discarray(labels_filename, 'w+', np.int64, ncoords)
-    cur = 0
-    for C, c in enumerate(CLASSIFICATION_CATEGORIES):
-        if c['has_coords']:
-            n = c['coords'].shape[0]
-            categories[cur:cur+n] = C
-            cur += n
-
-    # --- saving block features (comment if not needed) --- #
-    print(f'  Saving features for all blocks in image "{base}"')
-    for feature in CLASSIFICATION_FEATURES:
-        feature_filename = join(CLASSIFICATION_FEATURES_OUTPUT,
-                                f"{base}_{feature['abbrv']}.bin")
-        feature['values'] = discarray(
-            feature_filename, 'w+', np.float64, ncoords)
-
-    cur = 0
+    # --- debugging blocks (looking at their positions) --- #
+    # fig, ax = plt.subplots()
+    # ax.imshow(img)
     for c in CLASSIFICATION_CATEGORIES:
         if c['has_coords']:
-            # defining block
             for p, (yc, xc) in enumerate(zip(c['coords'][:, 0],
                                              c['coords'][:, 1])):
-                print(f'  Block centered at y={yc}, x={xc}')
-
                 modified, (yc, xc), (yi, xi), (yf, xf) = \
                     adjust_block_center_get_corners(yc, xc, WS, h, w)
                 if modified:
                     c['coords'][p, :] = (yc, xc)
-                    print(f'  Adjusting block center to y={yc}, x={xc}')
+                rect = patches.Rectangle((xi, yi), WS, WS,
+                                         linewidth=1, edgecolor=c['color'],
+                                         facecolor='none')
+                # ax.add_patch(rect)
+                # ax.scatter(xc, yc, color=c['color'])
 
-                block = img[yi:yf, xi:xf]
-                segmented = segmentate(block)
-
-                for feature in CLASSIFICATION_FEATURES:
-                    print(f'    Calculating feature: {feature["name"]}')
-                    feature_val = feature['function'](block, segmented)
-                    feature["values"][cur] = feature_val
-                print()
-                cur += 1
-
-#    # --- saving blocks themselves (comment if not needed) --- #
+                # fig, axes = plt.subplots(1, 2)
+                # (yi, xi), (yf, xf) = get_block_corners(yc, xc, WS)
+                # axes.flat[0].imshow(img[yi:yf, xi:xf])
+                # axes.flat[1].imshow(shapely_rotate(img[yi:yf, xi:xf], angle=60))
+                # plt.show()
+    # plt.show()
+  
+#    # --- saving block labels (comment if not needed) --- #
+#    labels_filename = join(CLASSIFICATION_FEATURES_OUTPUT,
+#                           f'{base}_label.bin')
+#
+#    categories = discarray(labels_filename, 'w+', np.int64, ncoords)
+#    cur = 0
+#    for C, c in enumerate(CLASSIFICATION_CATEGORIES):
+#        if c['has_coords']:
+#            n = c['coords'].shape[0]
+#            categories[cur:cur+n] = C
+#            cur += n
+#
+#    # --- saving block features (comment if not needed) --- #
+#    print(f'  Saving features for all blocks in image "{base}"')
+#    for feature in CLASSIFICATION_FEATURES:
+#        feature_filename = join(CLASSIFICATION_FEATURES_OUTPUT,
+#                                f"{base}_{feature['abbrv']}.bin")
+#        feature['values'] = discarray(
+#            feature_filename, 'w+', np.float64, ncoords)
+#
 #    cur = 0
 #    for c in CLASSIFICATION_CATEGORIES:
 #        if c['has_coords']:
 #            # defining block
-#            for yc, xc in zip(c['coords'][:, 0],
-#                              c['coords'][:, 1]):
-#                (yi, xi), (yf, xf) = get_block_corners(yc, xc, WS)
-#                block_filename = join(CLASSIFICATION_BLOCKS_OUTPUT,
-#                                      f"{base}_block_{cur}.bin")
-#                block_file = discarray(block_filename, 'w+', np.float64,
-#                                       block.shape)
+#            for p, (yc, xc) in enumerate(zip(c['coords'][:, 0],
+#                                             c['coords'][:, 1])):
+#                print(f'  Block centered at y={yc}, x={xc}')
+#
+#                modified, (yc, xc), (yi, xi), (yf, xf) = \
+#                    adjust_block_center_get_corners(yc, xc, WS, h, w)
+#                if modified:
+#                    c['coords'][p, :] = (yc, xc)
+#                    print(f'  Adjusting block center to y={yc}, x={xc}')
+#
 #                block = img[yi:yf, xi:xf]
-#                block_file[...] = block
+#                segmented = segmentate(block)
+#
+#                for feature in CLASSIFICATION_FEATURES:
+#                    print(f'    Calculating feature: {feature["name"]}')
+#                    feature_val = feature['function'](block, segmented)
+#                    feature["values"][cur] = feature_val
+#                print()
 #                cur += 1
+#
+##    # --- saving blocks themselves (comment if not needed) --- #
+##    cur = 0
+##    for c in CLASSIFICATION_CATEGORIES:
+##        if c['has_coords']:
+##            # defining block
+##            for yc, xc in zip(c['coords'][:, 0],
+##                              c['coords'][:, 1]):
+##                (yi, xi), (yf, xf) = get_block_corners(yc, xc, WS)
+##                block_filename = join(CLASSIFICATION_BLOCKS_OUTPUT,
+##                                      f"{base}_block_{cur}.bin")
+##                block_file = discarray(block_filename, 'w+', np.float64,
+##                                       block.shape)
+##                block = img[yi:yf, xi:xf]
+##                block_file[...] = block
+##                cur += 1
