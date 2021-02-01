@@ -68,13 +68,13 @@ CLASSIFICATION_CATEGORIES = [
         'color': 'blue',
     },
     {
+        'name': 'ship',
+        'color': 'darkmagenta',
+    },
+    {
         'name': 'terrain',
         'color': 'brown',
     },
-    # {
-    # 'name': 'lookalike',
-    # 'color': 'yellow',
-    # },
 ]
 
 
