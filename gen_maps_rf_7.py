@@ -3,7 +3,8 @@ from os import listdir, mkdir
 from os.path import join, splitext, basename, exists
 from routines.functions import discarray, get_mwa, get_mrwa, mwsd
 from routines.overpool import overlapping_pool
-from classification_rf_2 import classify
+# from classification_rf_2 import classify
+from parameters import CLASSIFICATION_CATEGORIES, CLASSIFICATION_CATEGORIES_2
 import matplotlib as mpl
 import numpy as np
 import scipy.ndimage as sciimg
@@ -12,6 +13,7 @@ import netCDF4 as nc
 import pandas as pd
 import seaborn as sns
 import matplotlib as mpl
+mpl.use('Agg')
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 import matplotlib.ticker as mplticker
@@ -23,56 +25,73 @@ from shapely.vectorized import contains
 plt.style.use('seaborn')
 sns.set_context('paper')
 
-proba = True  # oil probability?
-cmap0 = 'gray'
-factor = 8
-show = False
-out_ext = 'png'
-# factor = 100
 
-IN = '/mnt/hdd/home/tmp/los/data/original'
-# IN = '/home/marcosrdac/tmp/los/data/test_cases'
+proba = False  # oil probability?
+N_CLASSES = 7
+CMAP0 = 'gray'
+FACTOR = 8
+SHOW = False
+OUT_EXT = 'png'
+WS = 512
+WHS = WS//2
+TODAY = datetime.now().strftime('%Y%m%d%H')
 
-TODAY = datetime.today().strftime('%Y%m%d')
-if proba:
-    OUT = f'/mnt/hdd/home/tmp/los/data/maps/{TODAY}_prob_maps'
-    cmap1 = 'Reds'
-    def _classify(img, proba=True):
-        return classify(img, proba)[0]
-else:
-    OUT = f'/mnt/hdd/home/tmp/los/data/maps/{TODAY}_cls_maps'
-    cmap1 = 'Greys_r'
-    def _classify(img, proba=False):
-        return classify(img, proba)[0]
-BIN = join(OUT, 'bin')
-IMG = join(OUT, 'img')
-for p in [OUT, BIN, IMG]:
-    if not exists(p):
-        mkdir(p)
-
-# def _classify(img, proba=True):
-    # return 1
-
-ls = [join(IN, f) for f in listdir(IN) if f.endswith('.nc')]
-
-band_choices = {
-    'Sigma0_IW1_VV_db',
-    'Sigma0_IW2_VV_db',
-    'Intensity_IW2_VV_db',
-    'Sigma0_VV_db',
-    'Sigma0_db',
-}
-
+# Possible NetCDF4 variables
+band_choices = ['Sigma0_IW1_VV_db', 'Sigma0_IW2_VV_db', 'Intensity_IW2_VV_db',
+                'Sigma0_VV_db', 'Sigma0_db',]
 lat_choices = ['latitude', 'lat', 'LATITUDE', 'LAT',]
 lon_choices = {'longitude', 'lon', 'LONGITUDE', 'LON',}
 
-ws = 512
-whs = ws//2
 
-# i=0
+# IN = '/home/marcosrdac/tmp/los/data/test_cases'
+
+if N_CLASSES == 2:
+    from classification_rf_2 import classify
+else:
+    from classification_rf_7 import classify
+
+if proba:
+    MAP_KIND = 'prob'
+    MAP_DTYPE = np.float64
+    INTERP_METHOD = 'cubic'
+    CMAP1 = 'Reds'
+    def _classify(img, proba=True):
+        return classify(img, proba)[0]
+else:
+    MAP_KIND = 'class'
+    MAP_DTYPE = np.int32
+    INTERP_METHOD = 'nearest'
+    if N_CLASSES == 2:
+        colors = [c['color'] for c in CLASSIFICATION_CATEGORIES if c in CLASSIFICATION_CATEGORIES_2]
+        labels = [c['name'].capitalize() for c in CLASSIFICATION_CATEGORIES if c in CLASSIFICATION_CATEGORIES_2]
+    else:
+        colors = [c['color'] for c in CLASSIFICATION_CATEGORIES]
+        labels = [c['name'].capitalize() for c in CLASSIFICATION_CATEGORIES]
+    CMAP1 = mpl.colors.LinearSegmentedColormap.from_list('feat_colors', colors)
+    def _classify(img, proba=False):
+        return classify(img, proba)[0]
+    IM = plt.imshow([np.arange(7)], cmap=CMAP1)
+    plt.close()
+
+# Input folder settings
+IN = '/mnt/hdd/home/tmp/los/data/original'
+# Output folder settings
+BASE = '/mnt/hdd/home/tmp/los/data/maps'
+OUT = join(BASE, f'{TODAY}_{N_CLASSES}_{MAP_KIND}_maps')
+BIN = join(OUT, 'bin')
+IMG = join(OUT, 'img')
+
+for p in [OUT, BIN, IMG]:
+    if not exists(p): mkdir(p)
+
+# debugging
+# def _classify(img, proba=True):
+    # return 1
+
+
+ls = [join(IN, f) for f in listdir(IN) if f.endswith('.nc')]
+
 for f in ls:
-    # i += 1
-    # if i ==1: continue
     name = splitext(basename(f))[0]
     
     of = join(IN, name + ".nc")
@@ -95,7 +114,8 @@ for f in ls:
     for band in band_choices:
         if band in ncd.variables:
             img = ncd.variables[band]
-    
+
+    # print(np.asarray(img).size)
     if img.size < 1024**2:
         print(f'*** Skipping {name} for it is too small.')
         continue
@@ -140,14 +160,14 @@ for f in ls:
     fig, (ax0, ax1) = plt.subplots(1, 2, figsize=(10,7), dpi=300, sharex=True,
                                    subplot_kw={'projection': projection})
 
-    slon = lon[min_lat:max_lat:factor, min_lon:max_lon:factor]
-    slat = lat[min_lat:max_lat:factor, min_lon:max_lon:factor]
-    simg = img[min_lat:max_lat:factor, min_lon:max_lon:factor]
+    slon = lon[min_lat:max_lat:FACTOR, min_lon:max_lon:FACTOR]
+    slat = lat[min_lat:max_lat:FACTOR, min_lon:max_lon:FACTOR]
+    simg = img[min_lat:max_lat:FACTOR, min_lon:max_lon:FACTOR]
     # simg[simg.mask] = np.nan
     # simg = sciimg.gaussian_filter(simg, .5)
 
     # ax0 = fig.add_subplot(211, projection=projection)
-    pc0 = ax0.pcolormesh(slon, slat, simg, shading='nearest', cmap=cmap0)
+    pc0 = ax0.pcolormesh(slon, slat, simg, shading='nearest', cmap=CMAP0)
     gl0 = ax0.gridlines(crs=projection, draw_labels=True,
                   linewidth=1, color='white', alpha=.2, linestyle='--')
     gl0.xlabels_top=False
@@ -163,11 +183,12 @@ for f in ls:
 
     wimg = img[min_lat:max_lat, min_lon:max_lon]
 
-    out = overlapping_pool(wimg, whs=whs, pool_func=_classify, extra=False, give_window=False, dtype=float)
-    # out = discarray('/home/marcosrdac/article_los/campos/subset_0_of_S1B_IW_SLC__1SDV_20210120T080527_20210120T080554_025235_030137_BB07_Cal_Orb_deb_ML.bin', dtype=np.float64)
+    out = overlapping_pool(wimg, whs=WHS, pool_func=_classify, extra=False, give_window=False, dtype=MAP_DTYPE)
+    # out = discarray('/mnt/hdd/home/tmp/los/data/maps/2021020423_7_class_maps/bin/1_S1A_IW_SL1C__1SDV_20210125T095454_20210125T095521_036293_044201_379E_split_Orb_Cal_deb_ML_dB.bin', dtype=MAP_DTYPE)
+
     _out = discarray(join(BIN, name + '.bin'), mode='w+', shape=out.shape, dtype=out.dtype)
     _out[...] = out
-    idx = overlapping_pool(wimg, whs=whs, pool_func=mid, extra=False, give_window=True, last_dim=2, dtype=int)
+    idx = overlapping_pool(wimg, whs=WHS, pool_func=mid, extra=False, give_window=True, last_dim=2, dtype=int)
     # del wimg
 
      
@@ -180,28 +201,42 @@ for f in ls:
     out_values = out.ravel()
     print(slon.shape)
     print(slat.shape)
-    sout = sciint.griddata(out_coords, out_values, (slat, slon), method='cubic')
+    sout = sciint.griddata(out_coords, out_values, (slat, slon), method=INTERP_METHOD)
     print(sout.shape)
 
 
     # ax1 = fig.add_subplot(212, projection=projection)
-    # pc1 = ax1.pcolormesh(out_lon, out_lat, out, shading='flat', cmap=cmap1, vmin=0, vmax=1)
-    pc1 = ax1.pcolormesh(slon, slat, sout, shading='flat', cmap=cmap1, vmin=0, vmax=1)
+
+    # cmap configuration
+    if proba:
+        pc1 = ax1.pcolormesh(slon, slat, sout, shading='flat', cmap=CMAP1, vmin=0, vmax=1)
+        ax1.set_title('Oil probability')
+        cbar1 = plt.colorbar(pc1, ax=ax1, fraction=0.046, pad=0.04, orientation='horizontal')
+    else:
+        pc1 = ax1.pcolormesh(slon, slat, sout, shading='flat', cmap=CMAP1, vmin=0, vmax=N_CLASSES-1)
+        ax1.set_title('Classification map')
+        boundaries = np.arange(0, len(labels)+1)
+        values = boundaries[:-1]
+        ticks = values + 0.5
+        cbar1 = plt.colorbar(IM, ax=ax1, fraction=0.046, pad=0.04, orientation='horizontal',
+                            boundaries=boundaries, values=values, ticks=boundaries)
+        cbar1.set_ticks(ticks)
+        cbar1.set_ticklabels(np.arange(len(labels)))
+        cbar1.set_ticklabels(labels)
+
+
     gl1 = ax1.gridlines(crs=projection, draw_labels=True,
                   linewidth=1, color='white', alpha=.2, linestyle='--')
     gl1.xlabels_top=False
     gl1.ylabels_right=False
-    cbar1 = plt.colorbar(pc1, ax=ax1, fraction=0.046, pad=0.04, orientation='horizontal')
-    # cbar1.ax.set_xlabel('Oil probability', rotation=0)
-    ax1.set_title('Oil probability')
     # ax1.set_xlim(ax0.get_xlim())
     # ax1.set_ylim(ax0.get_ylim())
 
     # break
 
     # plt.tight_layout()
-    plt.savefig(join(IMG, name + '.' + out_ext))
-    if show:
+    plt.savefig(join(IMG, name + '.' + OUT_EXT))
+    if SHOW:
         plt.show()
     plt.close(fig)
-    ncd.close()
+    # ncd.close()

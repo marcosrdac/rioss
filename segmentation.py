@@ -31,13 +31,13 @@ def segmentate(img, ret_aux=False):
 if __name__ == '__main__':
     ncfiles = True
 
-    band_choices = {
+    band_choices = [
         'Sigma0_IW1_VV_db',
         'Sigma0_IW2_VV_db',
         'Intensity_IW2_VV_db',
         'Sigma0_VV_db',
         'Sigma0_db',
-    }
+    ]
 
     IN_DA = "/mnt/hdd/home/tmp/los/data/classification_blocks"
     IN_NC = "/mnt/hdd/home/tmp/los/data/original"
