@@ -26,12 +26,16 @@ plt.style.use('seaborn')
 sns.set_context('paper')
 
 
-proba = False  # oil probability?
-N_CLASSES = 7
+proba = True  # oil probability?
+N_CLASSES = 2
+# proba = False  # oil probability?
+# N_CLASSES = 7
+
 CMAP0 = 'gray'
 FACTOR = 8
 SHOW = False
-OUT_EXT = 'png'
+# OUT_EXTS = ['svg', 'png']
+OUT_EXTS = ['png']
 WS = 512
 WHS = WS//2
 TODAY = datetime.now().strftime('%Y%m%d%H')
@@ -51,10 +55,11 @@ else:
     from classification_rf_7 import classify
 
 if proba:
-    MAP_KIND = 'prob'
+    MAP_KIND = 'proba'
     MAP_DTYPE = np.float64
     INTERP_METHOD = 'cubic'
-    CMAP1 = 'Reds'
+    # CMAP1 = 'Reds'
+    CMAP1 = 'jet'
     def _classify(img, proba=True):
         return classify(img, proba)[0]
 else:
@@ -174,7 +179,7 @@ for f in ls:
     gl0.ylabels_right=False
     cbar0 = plt.colorbar(pc0, ax=ax0, fraction=0.046, pad=0.04, orientation='horizontal')
     # cbar0.ax.set_xlabel('$\sigma_0$', rotation=0)
-    ax0.set_title('$\sigma_0$')
+    ax0.set_title('$\sigma_0\ (dB)$')
 
 
 
@@ -235,7 +240,9 @@ for f in ls:
     # break
 
     # plt.tight_layout()
-    plt.savefig(join(IMG, name + '.' + OUT_EXT))
+    for ext in OUT_EXTS:
+        plt.savefig(join(IMG, name + '.' + ext))
+
     if SHOW:
         plt.show()
     plt.close(fig)

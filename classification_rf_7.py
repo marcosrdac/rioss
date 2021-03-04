@@ -26,21 +26,21 @@ FEATURES = [{'name': name, 'function': BLOCK_FUNCTIONS[name]}
 
 # print(FEATURES)
 
+def calculate_features(img):
+    n_functions = len(FEATURES)
+    feats = np.empty(n_functions)
+    segmented = segmentate(img)
+    glcm = get_glcm(img)
+    segglcm = get_glcm(segmented)
+    _grad = grad(img)
+
+    for i, feature in enumerate(FEATURES):
+        print(f"    Calculating: {feature['name']}")
+        feats[i] = feature['function'](img, segmented, glcm, segglcm, _grad)
+        # print(feats[i])
+    return(feats)
+
 def classify(img, proba=False):
-    def calculate_features(img):
-        n_functions = len(FEATURES)
-        feats = np.empty(n_functions)
-        segmented = segmentate(img)
-        glcm = get_glcm(img)
-        segglcm = get_glcm(segmented)
-        _grad = grad(img)
-
-        for i, feature in enumerate(FEATURES):
-            print(f"    Calculating: {feature['name']}")
-            feats[i] = feature['function'](img, segmented, glcm, segglcm, _grad)
-            # print(feats[i])
-        return(feats)
-
     # return calculate_features(img)
     # Add verbose option
     print(f"    Calculating block features.")
