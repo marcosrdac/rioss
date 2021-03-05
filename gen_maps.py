@@ -1,9 +1,9 @@
 from datetime import datetime
 from os import listdir, mkdir
 from os.path import join, splitext, basename, exists
-from routines.functions import discarray, get_mwa, get_mrwa, mwsd
+from routines.functions import discarray
 from routines.overpool import overlapping_pool
-# from classification_rf_2 import classify
+from classification import apply_detector, apply_classifier
 from parameters import CLASSIFICATION_CATEGORIES, CLASSIFICATION_CATEGORIES_2
 import matplotlib as mpl
 import numpy as np
@@ -26,10 +26,12 @@ plt.style.use('seaborn')
 sns.set_context('paper')
 
 
-proba = True  # oil probability?
+PROBA = True  # oil probability?
 N_CLASSES = 2
-# proba = False  # oil probability?
+# PROBA = False  # oil probability?
 # N_CLASSES = 7
+
+VERBOSE = True
 
 CMAP0 = 'gray'
 FACTOR = 8
@@ -40,6 +42,7 @@ WS = 512
 WHS = WS//2
 TODAY = datetime.now().strftime('%Y%m%d%H')
 
+
 # Possible NetCDF4 variables
 band_choices = ['Sigma0_IW1_VV_db', 'Sigma0_IW2_VV_db', 'Intensity_IW2_VV_db',
                 'Sigma0_VV_db', 'Sigma0_db',]
@@ -47,21 +50,14 @@ lat_choices = ['latitude', 'lat', 'LATITUDE', 'LAT',]
 lon_choices = {'longitude', 'lon', 'LONGITUDE', 'LON',}
 
 
-# IN = '/home/marcosrdac/tmp/los/data/test_cases'
-
-if N_CLASSES == 2:
-    from classification_rf_2 import classify
-else:
-    from classification_rf_7 import classify
-
-if proba:
-    MAP_KIND = 'proba'
+if PROBA:
+    MAP_KIND = 'PROBA'
     MAP_DTYPE = np.float64
     INTERP_METHOD = 'cubic'
     # CMAP1 = 'Reds'
     CMAP1 = 'jet'
-    def _classify(img, proba=True):
-        return classify(img, proba)[0]
+    def apply_model(img, proba=PROBA):
+        return apply_detector(img, proba, verbose=VERBOSE)[0]
 else:
     MAP_KIND = 'class'
     MAP_DTYPE = np.int32
@@ -69,14 +65,21 @@ else:
     if N_CLASSES == 2:
         colors = [c['color'] for c in CLASSIFICATION_CATEGORIES if c in CLASSIFICATION_CATEGORIES_2]
         labels = [c['name'].capitalize() for c in CLASSIFICATION_CATEGORIES if c in CLASSIFICATION_CATEGORIES_2]
+        def apply_model(img, proba=PROBA, verbose=VERBOSE):
+            return apply_detector(img, proba)[0]
     else:
         colors = [c['color'] for c in CLASSIFICATION_CATEGORIES]
         labels = [c['name'].capitalize() for c in CLASSIFICATION_CATEGORIES]
+        def apply_model(img, proba=PROBA, verbose=VERBOSE):
+            return apply_classifier(img, proba)[0]
     CMAP1 = mpl.colors.LinearSegmentedColormap.from_list('feat_colors', colors)
-    def _classify(img, proba=False):
-        return classify(img, proba)[0]
     IM = plt.imshow([np.arange(7)], cmap=CMAP1)
     plt.close()
+
+# debugging
+# def apply_model(img, proba=True):
+    # return 1
+
 
 # Input folder settings
 IN = '/mnt/hdd/home/tmp/los/data/original'
@@ -88,10 +91,6 @@ IMG = join(OUT, 'img')
 
 for p in [OUT, BIN, IMG]:
     if not exists(p): mkdir(p)
-
-# debugging
-# def _classify(img, proba=True):
-    # return 1
 
 
 ls = [join(IN, f) for f in listdir(IN) if f.endswith('.nc')]
@@ -175,8 +174,8 @@ for f in ls:
     pc0 = ax0.pcolormesh(slon, slat, simg, shading='nearest', cmap=CMAP0)
     gl0 = ax0.gridlines(crs=projection, draw_labels=True,
                   linewidth=1, color='white', alpha=.2, linestyle='--')
-    gl0.xlabels_top=False
-    gl0.ylabels_right=False
+    gl0.top_labels=False
+    gl0.right_labels=False
     cbar0 = plt.colorbar(pc0, ax=ax0, fraction=0.046, pad=0.04, orientation='horizontal')
     # cbar0.ax.set_xlabel('$\sigma_0$', rotation=0)
     ax0.set_title('$\sigma_0\ (dB)$')
@@ -188,7 +187,7 @@ for f in ls:
 
     wimg = img[min_lat:max_lat, min_lon:max_lon]
 
-    out = overlapping_pool(wimg, whs=WHS, pool_func=_classify, extra=False, give_window=False, dtype=MAP_DTYPE)
+    out = overlapping_pool(wimg, whs=WHS, pool_func=apply_model, extra=False, give_window=False, dtype=MAP_DTYPE)
     # out = discarray('/mnt/hdd/home/tmp/los/data/maps/2021020423_7_class_maps/bin/1_S1A_IW_SL1C__1SDV_20210125T095454_20210125T095521_036293_044201_379E_split_Orb_Cal_deb_ML_dB.bin', dtype=MAP_DTYPE)
 
     _out = discarray(join(BIN, name + '.bin'), mode='w+', shape=out.shape, dtype=out.dtype)
@@ -213,12 +212,12 @@ for f in ls:
     # ax1 = fig.add_subplot(212, projection=projection)
 
     # cmap configuration
-    if proba:
-        pc1 = ax1.pcolormesh(slon, slat, sout, shading='flat', cmap=CMAP1, vmin=0, vmax=1)
+    if PROBA:
+        pc1 = ax1.pcolormesh(slon, slat, sout, shading='nearest', cmap=CMAP1, vmin=0, vmax=1)
         ax1.set_title('Oil probability')
         cbar1 = plt.colorbar(pc1, ax=ax1, fraction=0.046, pad=0.04, orientation='horizontal')
     else:
-        pc1 = ax1.pcolormesh(slon, slat, sout, shading='flat', cmap=CMAP1, vmin=0, vmax=N_CLASSES-1)
+        pc1 = ax1.pcolormesh(slon, slat, sout, shading='nearest', cmap=CMAP1, vmin=0, vmax=N_CLASSES-1)
         ax1.set_title('Classification map')
         boundaries = np.arange(0, len(labels)+1)
         values = boundaries[:-1]
@@ -232,8 +231,8 @@ for f in ls:
 
     gl1 = ax1.gridlines(crs=projection, draw_labels=True,
                   linewidth=1, color='white', alpha=.2, linestyle='--')
-    gl1.xlabels_top=False
-    gl1.ylabels_right=False
+    gl1.top_labels=False
+    gl1.right_labels=False
     # ax1.set_xlim(ax0.get_xlim())
     # ax1.set_ylim(ax0.get_ylim())
 
