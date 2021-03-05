@@ -25,6 +25,12 @@ from shapely.vectorized import contains
 plt.style.use('seaborn')
 sns.set_context('paper')
 
+def send_warning_email():
+    pass
+
+
+PROBA_THRESHOLD = .1
+
 
 PROBA = True  # oil probability?
 N_CLASSES = 2
@@ -51,7 +57,7 @@ lon_choices = {'longitude', 'lon', 'LONGITUDE', 'LON',}
 
 
 if PROBA:
-    MAP_KIND = 'PROBA'
+    MAP_KIND = 'proba'
     MAP_DTYPE = np.float64
     INTERP_METHOD = 'cubic'
     # CMAP1 = 'Reds'
@@ -85,11 +91,12 @@ else:
 IN = '/mnt/hdd/home/tmp/los/data/original'
 # Output folder settings
 BASE = '/mnt/hdd/home/tmp/los/data/maps'
-OUT = join(BASE, f'{TODAY}_{N_CLASSES}_{MAP_KIND}_maps')
+OUT = join(BASE, f'{TODAY}_rioss')
 BIN = join(OUT, 'bin')
 IMG = join(OUT, 'img')
+RESULTS = join(OUT, 'results')
 
-for p in [OUT, BIN, IMG]:
+for p in [OUT, BIN, IMG, RESULTS]:
     if not exists(p): mkdir(p)
 
 
@@ -176,22 +183,18 @@ for f in ls:
     # cbar0.ax.set_xlabel('$\sigma_0$', rotation=0)
     ax0.set_title('$\sigma_0\ (dB)$')
 
-
-
     def mid(subimg, window=None):
         return np.mean(window, axis=1)
 
     wimg = img[min_lat:max_lat, min_lon:max_lon]
 
     out = overlapping_pool(wimg, whs=WHS, pool_func=apply_model, extra=False, give_window=False, dtype=MAP_DTYPE)
-    # out = discarray('/mnt/hdd/home/tmp/los/data/maps/2021020423_7_class_maps/bin/1_S1A_IW_SL1C__1SDV_20210125T095454_20210125T095521_036293_044201_379E_split_Orb_Cal_deb_ML_dB.bin', dtype=MAP_DTYPE)
+    # out = discarray('/mnt/hdd/home/tmp/los/data/maps/2021030510_2_proba_maps/bin/1_S1A_IW_SL1C__1SDV_20210125T095454_20210125T095521_036293_044201_379E_split_Orb_Cal_deb_ML_dB.bin', dtype=MAP_DTYPE)
 
     _out = discarray(join(BIN, name + '.bin'), mode='w+', shape=out.shape, dtype=out.dtype)
     _out[...] = out
-    idx = overlapping_pool(wimg, whs=WHS, pool_func=mid, extra=False, give_window=True, last_dim=2, dtype=int)
-    # del wimg
 
-     
+    idx = overlapping_pool(wimg, whs=WHS, pool_func=mid, extra=False, give_window=True, last_dim=2, dtype=int)
     y = idx[...,0].ravel() + min_lat
     x = idx[...,1].ravel() + min_lon
     out_lat = lat[:][y, x].reshape(out.shape)
@@ -199,11 +202,20 @@ for f in ls:
 
     out_coords = np.stack([out_lat.ravel(), out_lon.ravel()], axis=1)
     out_values = out.ravel()
-    print(slon.shape)
-    print(slat.shape)
+    # print(slon.shape)
+    # print(slat.shape)
     sout = sciint.griddata(out_coords, out_values, (slat, slon), method=INTERP_METHOD)
-    print(sout.shape)
+    # print(sout.shape)
 
+    at_risk = out_values >= PROBA_THRESHOLD
+    x_risk, y_risk = x[at_risk], x[at_risk]
+    lat_risk, lon_risk = out_lat.ravel()[at_risk], out_lon.ravel()[at_risk]
+    out_risk = out.ravel()[at_risk]
+
+    if np.any(at_risk):
+        sheet = np.stack([x_risk, y_risk, lat_risk, lon_risk, out_risk], axis=1)
+        np.savetxt(join(RESULTS, name + '.csv'), sheet, header='x,y,lat,lon,proba')
+        # send_warning_email()
 
     # cmap configuration
     if PROBA:

@@ -51,7 +51,7 @@ lon_choices = {'longitude', 'lon', 'LONGITUDE', 'LON',}
 
 
 if PROBA:
-    MAP_KIND = 'PROBA'
+    MAP_KIND = 'proba'
     MAP_DTYPE = np.float64
     INTERP_METHOD = 'cubic'
     # CMAP1 = 'Reds'
