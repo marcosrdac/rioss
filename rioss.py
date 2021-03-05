@@ -36,10 +36,10 @@ VERBOSE = True
 CMAP0 = 'gray'
 FACTOR = 8
 SHOW = False
-# OUT_EXTS = ['svg', 'png']
-OUT_EXTS = ['png']
+OUT_EXTS = ['png']  #  ['svg', 'png']
 WS = 512
 WHS = WS//2
+PROJECTION = crs.PlateCarree()
 TODAY = datetime.now().strftime('%Y%m%d%H')
 
 
@@ -118,13 +118,12 @@ for f in ls:
     for band in band_choices:
         if band in ncd.variables:
             img = ncd.variables[band]
+    # img = discarray('/home/marcosrdac/article_los/campos/interpolated.bin', dtype=np.float32)
 
     # print(np.asarray(img).size)
     if img.size < 1024**2:
         print(f'*** Skipping {name} for it is too small.')
         continue
-
-    # img = discarray('/home/marcosrdac/article_los/campos/interpolated.bin', dtype=np.float32)
 
     try:
         raise Exception
@@ -159,10 +158,8 @@ for f in ls:
         min_lon, max_lon = 0, img.shape[0]
         min_lat, max_lat = 0, img.shape[1]
 
-    projection = crs.PlateCarree()
-
     fig, (ax0, ax1) = plt.subplots(1, 2, figsize=(10,7), dpi=300, sharex=True,
-                                   subplot_kw={'projection': projection})
+                                   subplot_kw={'projection': PROJECTION})
 
     slon = lon[min_lat:max_lat:FACTOR, min_lon:max_lon:FACTOR]
     slat = lat[min_lat:max_lat:FACTOR, min_lon:max_lon:FACTOR]
@@ -171,7 +168,7 @@ for f in ls:
     # simg = sciimg.gaussian_filter(simg, .5)
 
     pc0 = ax0.pcolormesh(slon, slat, simg, shading='nearest', cmap=CMAP0)
-    gl0 = ax0.gridlines(crs=projection, draw_labels=True,
+    gl0 = ax0.gridlines(crs=PROJECTION, draw_labels=True,
                   linewidth=1, color='white', alpha=.2, linestyle='--')
     gl0.top_labels=False
     gl0.right_labels=False
@@ -226,7 +223,7 @@ for f in ls:
         cbar1.set_ticklabels(labels)
 
 
-    gl1 = ax1.gridlines(crs=projection, draw_labels=True,
+    gl1 = ax1.gridlines(crs=PROJECTION, draw_labels=True,
                   linewidth=1, color='white', alpha=.2, linestyle='--')
     gl1.top_labels=False
     gl1.right_labels=False
