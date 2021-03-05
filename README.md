@@ -7,10 +7,10 @@
 
 ## Contributors
 
-- **Marcos Reinan de Assis Conceição**, Junior Researcher (july 2019 - present) - **Main Developer, Data Modeling Agent, Database Manager**
-- Professor **Luis Felipe Ferreira de Mendonça**, PhD. (july 2019 - present) - **RIOSS project Coordinator, project advisor, Database Manager, Developer**
-- Professor **Carlos Alessandre Domingos Lentini**, PhD. (march 2020 - present) - *Project Co-advisor*
-- Professor **André Telles da Cunha Lima**, PhD. (march 2020 - present) - *BR-Oil Coordinator*
-- Professor **Milton José Porsani**, PhD. (march 2020 - present) - *Developer*
-- **Luis Fernando Oliveira**, Junior Researcher (september 2020 - present) - *Developer*
-- **Laysla Possebon**, Junior Researcher (july 2019 - july 2020) - *Database Manager*
+- **Marcos Reinan de Assis Conceição**, Junior Researcher (July 2019 - present) - **Main Developer, Data Modeling Agent, Database Manager**
+- Professor **Luis Felipe Ferreira de Mendonça**, PhD. (July 2019 - present) - **RIOSS project Coordinator, Database Manager, Developer**
+- Professor **Carlos Alessandre Domingos Lentini**, PhD. (March 2020 - present) - *Project Co-advisor*
+- Professor **André Telles da Cunha Lima**, PhD. (March 2020 - present) - *BR-Oil Coordinator*
+- Professor **Milton José Porsani**, PhD. (March 2020 - present) - *Developer*
+- **Luis Fernando Oliveira**, Junior Researcher (September 2020 - present) - *Developer*
+- **Laysla Possebon**, Junior Researcher (July 2019 - July 2020) - *Database Manager*
