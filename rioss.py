@@ -5,6 +5,7 @@ from routines.functions import discarray
 from routines.overpool import overlapping_pool
 from classification import apply_detector, apply_classifier
 from parameters import CLASSIFICATION_CATEGORIES, CLASSIFICATION_CATEGORIES_2
+from parameters import DATA, CLASSIFICATION_INPUT_DATA
 import matplotlib as mpl
 import numpy as np
 import scipy.ndimage as sciimg
@@ -88,9 +89,9 @@ else:
 
 
 # Input folder settings
-IN = '/mnt/hdd/home/tmp/los/data/original'
+IN = CLASSIFICATION_INPUT_DATA
 # Output folder settings
-BASE = '/mnt/hdd/home/tmp/los/data/maps'
+BASE = join(DATA, 'maps')
 OUT = join(BASE, f'{TODAY}_rioss')
 BIN = join(OUT, 'bin')
 IMG = join(OUT, 'img')

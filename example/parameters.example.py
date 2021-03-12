@@ -6,25 +6,25 @@ from routines.functions import *
 from routines import shannon
 from routines import semivariogram
 from os.path import expanduser, join
-HOME = expanduser('~')  # get cross platform user folder
+HOME = expanduser('~')  # get cross-platform user folder
 
 
 # MODIFY ALL FOLDER VARIABLES BELOW IF NECESSARY
 
 # Base folder for all modeling files
-# BASE = join(HOME, 'data')               # camobi
-BASE = join(HOME, 'tmp', 'los', 'data')  # home
+# DATA = join(HOME, 'data')               # camobi
+DATA = join(HOME, 'tmp', 'los', 'data')  # home
 
 
 # GENERIC ORIGINAL NETCDF DATA FOLDER
-ORIGINAL_DATA = join(BASE, 'original')
+ORIGINAL_DATA = join(DATA, 'original')
 
 
 # SEGMENTATION MODEL
 
 SEGMENTATION_INPUT_DATA = ORIGINAL_DATA
-SEGMENTATION_INPUT_MASKS = join(BASE, 'segmentation_masks')
-SEGMENTATION_FEATURES_OUTPUT = join(BASE, 'segmentation_model_features')
+SEGMENTATION_INPUT_MASKS = join(DATA, 'segmentation_masks')
+SEGMENTATION_FEATURES_OUTPUT = join(DATA, 'segmentation_model_features')
 
 
 SEGMENTATION_FEATURES = {
@@ -42,9 +42,9 @@ SEGMENTATION_FEATURES = {
 MODELS = 'models'
 
 CLASSIFICATION_INPUT_DATA = ORIGINAL_DATA
-CLASSIFICATION_INPUT_MASKS = join(BASE, 'classification_masks')
-CLASSIFICATION_BLOCKS_OUTPUT = join(BASE, 'classification_blocks')
-CLASSIFICATION_FEATURES_OUTPUT = join(BASE, 'classification_model_features')
+CLASSIFICATION_INPUT_MASKS = join(DATA, 'classification_masks')
+CLASSIFICATION_BLOCKS_OUTPUT = join(DATA, 'classification_blocks')
+CLASSIFICATION_FEATURES_OUTPUT = join(DATA, 'classification_model_features')
 
 WS = 512
 
