@@ -12,6 +12,7 @@ from PIL import Image
 from routines.functions import discarray, listifext, first_channel, \
     sample_min_dist, get_block_corners, adjust_block_center_get_corners, \
     shapely_rotate
+from routines.svd import svd_filter
 # from segmentation import segmentate
 from segmentation import segmentate
 from parameters import CLASSIFICATION_INPUT_DATA, \
@@ -26,6 +27,8 @@ import matplotlib.patches as patches
 
 
 # PRECONFIGURATION
+prefilt = True
+filt = lambda img: svd_filter(img, .7)
 
 # block side, half-side
 WS = 512
@@ -160,6 +163,9 @@ for ncf in input_data_fps:
 
                 for angle in augmentation_angles:
                     block = shapely_rotate(img[yi:yf, xi:xf], angle)
+                    if prefilt:
+                        block = filt(block)
+
                     segmented = segmentate(block)
 
                     for feature in CLASSIFICATION_FEATURES:
